@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYPER-TUNER | 3D Car Configurator & Dyno</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js & React Three Fiber -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.12?external=react,react-dom,three",
+                "@react-three/drei": "https://esm.sh/@react-three/drei@9.96.1?external=react,react-dom,three,@react-three/fiber",
+                "recharts": "https://esm.sh/recharts@2.10.3?external=react,react-dom",
+                "lucide-react": "https://esm.sh/lucide-react@0.294.0?external=react,react-dom"
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;900&display=swap');
+        
+        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+        
+        /* Neon Glows */
+        .neon-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.7); }
+        .neon-border { box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); }
+        
+        /* Grid Background */
+        .cyber-grid {
+            background-image: linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef, useMemo } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import * as THREE from 'three';
+        import { Canvas, useFrame } from '@react-three/fiber';
+        import { OrbitControls, Stage, PerspectiveCamera, Environment, Grid, Stars } from '@react-three/drei';
+        import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+        import { Gauge, Zap, Activity, Settings, Play, RotateCcw, Trophy, Wind, CircleDashed } from 'lucide-react';
+
+        // --- DATABASE ---
+        const CAR_DB = [
+            // GERMAN
+            { id: 'p1', name: 'Porsche 911 GT3 RS', hp: 518, tq: 342, weight: 3268, color: '#ef4444', type: 'Track', spoiler: 2.5, width: 2.2 },
+            { id: 'p2', name: 'Porsche 911 Turbo S', hp: 640, tq: 590, weight: 3636, color: '#fbbf24', type: 'Super', spoiler: 1.2, width: 2.1 },
+            { id: 'p3', name: 'Porsche Cayman GT4 RS', hp: 493, tq: 331, weight: 3227, color: '#3b82f6', type: 'Track', spoiler: 2.0, width: 2.0 },
+            { id: 'p4', name: 'Porsche 918 Spyder', hp: 887, tq: 944, weight: 3602, color: '#9ca3af', type: 'Hyper', spoiler: 0.5, width: 2.2 },
+            { id: 'b1', name: 'BMW M340i xDrive', hp: 382, tq: 369, weight: 3968, color: '#2563eb', type: 'Sport', spoiler: 0.2, width: 1.8 },
+            { id: 'b2', name: 'BMW M3 Competition', hp: 503, tq: 479, weight: 3990, color: '#10b981', type: 'Super', spoiler: 0.5, width: 2.0 },
+            { id: 'b3', name: 'BMW M5 CS', hp: 627, tq: 553, weight: 4114, color: '#064e3b', type: 'Super', spoiler: 0.8, width: 2.1 },
+            { id: 'b4', name: 'BMW M4 CSL', hp: 543, tq: 479, weight: 3640, color: '#cbd5e1', type: 'Track', spoiler: 1.8, width: 2.0 },
+            { id: 'a1', name: 'Audi RS7 Sportback', hp: 591, tq: 590, weight: 4938, color: '#64748b', type: 'Super', spoiler: 0.4, width: 2.1 },
+            { id: 'a2', name: 'Audi R8 V10 Perf', hp: 602, tq: 413, weight: 3571, color: '#facc15', type: 'Super', spoiler: 1.0, width: 2.2 },
+            { id: 'a3', name: 'Audi RS3', hp: 401, tq: 369, weight: 3472, color: '#84cc16', type: 'Sport', spoiler: 0.3, width: 1.8 },
+            { id: 'a4', name: 'Audi RS6 Avant', hp: 591, tq: 590, weight: 4960, color: '#334155', type: 'Super', spoiler: 0.4, width: 2.1 },
+            { id: 'm1', name: 'Mercedes-AMG GT BS', hp: 720, tq: 590, weight: 3616, color: '#f97316', type: 'Track', spoiler: 2.8, width: 2.3 },
+            { id: 'm2', name: 'Mercedes-AMG C63 S', hp: 503, tq: 516, weight: 3900, color: '#e2e8f0', type: 'Sport', spoiler: 0.4, width: 1.9 },
+            { id: 'm3', name: 'Mercedes-AMG E63 S', hp: 603, tq: 627, weight: 4497, color: '#1e293b', type: 'Super', spoiler: 0.3, width: 2.0 },
+            // EXOTIC
+            { id: 'l1', name: 'Lamborghini Huracan STO', hp: 630, tq: 417, weight: 2952, color: '#3b82f6', type: 'Track', spoiler: 2.2, width: 2.3 },
+            { id: 'l2', name: 'Lamborghini Aventador SVJ', hp: 759, tq: 531, weight: 3362, color: '#a855f7', type: 'Hyper', spoiler: 2.0, width: 2.4 },
+            { id: 'l3', name: 'Lamborghini Urus', hp: 641, tq: 627, weight: 4850, color: '#fcd34d', type: 'Super', spoiler: 0.2, width: 2.2 },
+            { id: 'f1', name: 'Ferrari SF90 Stradale', hp: 986, tq: 590, weight: 3461, color: '#dc2626', type: 'Hyper', spoiler: 0.8, width: 2.2 },
+            { id: 'f2', name: 'Ferrari F8 Tributo', hp: 710, tq: 568, weight: 3164, color: '#ef4444', type: 'Super', spoiler: 0.6, width: 2.1 },
+            { id: 'f3', name: 'Ferrari 812 Superfast', hp: 789, tq: 530, weight: 3594, color: '#7f1d1d', type: 'Super', spoiler: 0.5, width: 2.1 },
+            { id: 'mc1', name: 'McLaren 765LT', hp: 755, tq: 590, weight: 2952, color: '#f97316', type: 'Track', spoiler: 1.8, width: 2.2 },
+            { id: 'mc2', name: 'McLaren P1', hp: 903, tq: 664, weight: 3075, color: '#ea580c', type: 'Hyper', spoiler: 1.5, width: 2.2 },
+            // JDM & OTHERS
+            { id: 'j1', name: 'Nissan GT-R Nismo', hp: 600, tq: 481, weight: 3865, color: '#d1d5db', type: 'Super', spoiler: 2.0, width: 2.0 },
+            { id: 'j2', name: 'Toyota Supra MK5', hp: 382, tq: 368, weight: 3400, color: '#ef4444', type: 'Sport', spoiler: 0.8, width: 1.9 },
+            { id: 'j3', name: 'Toyota Supra MK4', hp: 320, tq: 315, weight: 3400, color: '#1f2937', type: 'Legend', spoiler: 1.5, width: 1.9 },
+            { id: 'j4', name: 'Mazda RX-7 FD', hp: 252, tq: 217, weight: 2800, color: '#facc15', type: 'Legend', spoiler: 1.0, width: 1.8 },
+            { id: 'j5', name: 'Honda NSX Type S', hp: 600, tq: 492, weight: 3878, color: '#9ca3af', type: 'Super', spoiler: 0.9, width: 2.1 },
+        ];
+
+        // --- AUDIO ENGINE ---
+        // Simple synth to simulate engine noise without loading external MP3s
+        const useEngineAudio = (rpm, isRunning) => {
+            const audioCtxRef = useRef(null);
+            const oscRef = useRef(null);
+            const gainRef = useRef(null);
+
+            useEffect(() => {
+                // Initialize Audio Context on user interaction (handled by Play button usually)
+                if (!audioCtxRef.current && isRunning) {
+                    audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                    const ctx = audioCtxRef.current;
+                    
+                    // Engine rumble (Sawtooth)
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sawtooth';
+                    
+                    const gain = ctx.createGain();
+                    gain.gain.value = 0.1;
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start();
+                    oscRef.current = osc;
+                    gainRef.current = gain;
+                }
+
+                // Update pitch based on RPM
+                if (oscRef.current && isRunning) {
+                    // Map RPM (0-9000) to Frequency (50Hz - 600Hz)
+                    const baseFreq = 60;
+                    const targetFreq = baseFreq + (rpm / 20); 
+                    oscRef.current.frequency.setTargetAtTime(targetFreq, audioCtxRef.current.currentTime, 0.1);
+                    
+                    // Add roughness/volume at higher RPM
+                    const vol = 0.1 + (rpm / 9000) * 0.1;
+                    gainRef.current.gain.setTargetAtTime(vol, audioCtxRef.current.currentTime, 0.1);
+                } else if (!isRunning && oscRef.current) {
+                    // Stop audio
+                    oscRef.current.stop();
+                    oscRef.current = null;
+                    audioCtxRef.current = null;
+                }
+                
+                return () => {
+                   if (!isRunning && oscRef.current) {
+                        oscRef.current.stop();
+                   }
+                }
+            }, [rpm, isRunning]);
+        };
+
+        // --- 3D COMPONENTS ---
+        
+        // Procedural Cyber Car (No external models needed)
+        const CyberCar = ({ color, spoilerSize, width, isRevving }) => {
+            const meshRef = useRef();
+            
+            useFrame((state) => {
+                if (!meshRef.current) return;
+                // Idle/Rev vibration
+                const shake = isRevving ? 0.005 : 0.001;
+                meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 20) * shake + 0.6;
+                meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * (shake * 0.5);
+            });
+
+            return (
+                <group ref={meshRef}>
+                    {/* Chassis Body - Dynamic Width */}
+                    <mesh position={[0, 0, 0]} castShadow receiveShadow>
+                        <boxGeometry args={[width, 0.5, 4.2]} />
+                        <meshStandardMaterial color={color} metalness={0.6} roughness={0.2} envMapIntensity={1.5} />
+                    </mesh>
+
+                    {/* Cabin/Greenhouse */}
+                    <mesh position={[0, 0.5, -0.2]}>
+                        <boxGeometry args={[width * 0.8, 0.6, 2.2]} />
+                        <meshStandardMaterial color="#111" metalness={0.9} roughness={0.1} />
+                    </mesh>
+                    
+                    {/* Windshield */}
+                    <mesh position={[0, 0.6, 1.0]} rotation={[0.4, 0, 0]}>
+                         <planeGeometry args={[width * 0.75, 1]} />
+                         <meshStandardMaterial color="#000" metalness={1} roughness={0} />
+                    </mesh>
+
+                    {/* Wheels - Front Left */}
+                    <mesh position={[width/2, -0.2, 1.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                        <cylinderGeometry args={[0.35, 0.35, 0.3, 32]} />
+                        <meshStandardMaterial color="#222" metalness={0.5} roughness={0.8} />
+                    </mesh>
+                    <mesh position={[width/2 + 0.16, -0.2, 1.4]} rotation={[0, 0, Math.PI / 2]}>
+                        <cylinderGeometry args={[0.2, 0.2, 0.05, 16]} />
+                        <meshStandardMaterial color="#555" metalness={0.9} roughness={0.2} />
+                    </mesh>
+
+                    {/* Wheels - Front Right */}
+                    <mesh position={[-width/2, -0.2, 1.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                        <cylinderGeometry args={[0.35, 0.35, 0.3, 32]} />
+                        <meshStandardMaterial color="#222" metalness={0.5} roughness={0.8} />
+                    </mesh>
+                    <mesh position={[-width/2 - 0.16, -0.2, 1.4]} rotation={[0, 0, Math.PI / 2]}>
+                        <cylinderGeometry args={[0.2, 0.2, 0.05, 16]} />
+                        <meshStandardMaterial color="#555" metalness={0.9} roughness={0.2} />
+                    </mesh>
+
+                    {/* Wheels - Rear Left */}
+                    <mesh position={[width/2, -0.2, -1.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                        <cylinderGeometry args={[0.38, 0.38, 0.4, 32]} />
+                        <meshStandardMaterial color="#222" metalness={0.5} roughness={0.8} />
+                    </mesh>
+
+                    {/* Wheels - Rear Right */}
+                    <mesh position={[-width/2, -0.2, -1.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
+                        <cylinderGeometry args={[0.38, 0.38, 0.4, 32]} />
+                        <meshStandardMaterial color="#222" metalness={0.5} roughness={0.8} />
+                    </mesh>
+
+                    {/* Dynamic Spoiler */}
+                    {spoilerSize > 0.1 && (
+                        <group position={[0, 0.6, -1.9]}>
+                            {/* Wing */}
+                            <mesh position={[0, spoilerSize * 0.2, 0]}>
+                                <boxGeometry args={[width + 0.2, 0.05, 0.4]} />
+                                <meshStandardMaterial color={color} />
+                            </mesh>
+                            {/* Struts */}
+                            <mesh position={[width/3, 0, 0]}>
+                                <boxGeometry args={[0.05, spoilerSize * 0.4, 0.2]} />
+                                <meshStandardMaterial color="#111" />
+                            </mesh>
+                            <mesh position={[-width/3, 0, 0]}>
+                                <boxGeometry args={[0.05, spoilerSize * 0.4, 0.2]} />
+                                <meshStandardMaterial color="#111" />
+                            </mesh>
+                        </group>
+                    )}
+
+                    {/* Headlights */}
+                    <mesh position={[width/3, 0.1, 2.11]}>
+                        <boxGeometry args={[0.4, 0.15, 0.1]} />
+                        <meshStandardMaterial color="#ccf" emissive="#ccf" emissiveIntensity={2} />
+                    </mesh>
+                    <mesh position={[-width/3, 0.1, 2.11]}>
+                        <boxGeometry args={[0.4, 0.15, 0.1]} />
+                        <meshStandardMaterial color="#ccf" emissive="#ccf" emissiveIntensity={2} />
+                    </mesh>
+
+                    {/* Taillights */}
+                    <mesh position={[0, 0.15, -2.11]}>
+                        <boxGeometry args={[width - 0.2, 0.1, 0.1]} />
+                        <meshStandardMaterial color="#f00" emissive="#f00" emissiveIntensity={1.5} />
+                    </mesh>
+                </group>
+            );
+        };
+
+        const Scene = ({ car, isRevving }) => {
+            return (
+                <>
+                    <PerspectiveCamera makeDefault position={[3, 2, 5]} fov={45} />
+                    <OrbitControls 
+                        enablePan={false} 
+                        minPolarAngle={0} 
+                        maxPolarAngle={Math.PI / 2.2}
+                        autoRotate={!isRevving}
+                        autoRotateSpeed={0.5}
+                    />
+                    
+                    <ambientLight intensity={0.5} />
+                    <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={100} castShadow />
+                    <pointLight position={[-10, -10, -10]} intensity={1} color="#06b6d4" />
+                    <Environment preset="city" />
+
+                    <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+                    
+                    <Grid infiniteGrid fadeDistance={30} sectionColor="#06b6d4" cellColor="#1e293b" />
+
+                    <CyberCar 
+                        color={car.color} 
+                        spoilerSize={car.spoiler} 
+                        width={car.width}
+                        isRevving={isRevving}
+                    />
+                </>
+            );
+        };
+
+        // --- MAIN APP COMPONENT ---
+        const App = () => {
+            const [selectedCar, setSelectedCar] = useState(CAR_DB[4]); // Default to M340i
+            const [mods, setMods] = useState({ tune: false, turbo: false, exhaust: false, e85: false });
+            
+            // Dyno State
+            const [dynoStatus, setDynoStatus] = useState('idle'); // idle, running, finished
+            const [rpm, setRpm] = useState(0);
+            const [data, setData] = useState([]);
+            const [logs, setLogs] = useState([]);
+            
+            // Stats Calculations
+            const stats = useMemo(() => {
+                let hp = selectedCar.hp;
+                let tq = selectedCar.tq;
+                
+                if (mods.tune) { hp *= 1.15; tq *= 1.15; }
+                if (mods.turbo) { hp *= 1.25; tq *= 1.10; } // Turbos add more HP top end
+                if (mods.exhaust) { hp *= 1.05; tq *= 1.02; }
+                if (mods.e85) { hp *= 1.12; tq *= 1.10; }
+
+                return { hp: Math.round(hp), tq: Math.round(tq) };
+            }, [selectedCar, mods]);
+
+            // Audio Hook
+            useEngineAudio(rpm, dynoStatus === 'running');
+
+            // Log Helper
+            const addLog = (msg) => {
+                setLogs(prev => [`> ${msg}`, ...prev].slice(0, 6));
+            };
+
+            // Dyno Logic
+            const runDyno = () => {
+                if (dynoStatus === 'running') return;
+                
+                setDynoStatus('running');
+                setData([]);
+                setLogs([]);
+                addLog(`INITIALIZING DYNO FOR ${selectedCar.name.toUpperCase()}...`);
+                
+                setTimeout(() => addLog("ENGINE START..."), 500);
+                setTimeout(() => addLog("LINKING ECU..."), 1000);
+                setTimeout(() => addLog("STARTING PULL..."), 1500);
+
+                let currentRpm = 800;
+                let maxRpm = 8000; // Generic redline
+                
+                const interval = setInterval(() => {
+                    currentRpm += 100; // Speed of sweep
+
+                    // Simulate Power Curve
+                    // TQ usually peaks mid-range then falls
+                    // HP = TQ * RPM / 5252
+                    
+                    // Simple physics sim:
+                    const peakTqRpm = 4500;
+                    const normalizedRpm = currentRpm / peakTqRpm;
+                    
+                    // Torque Curve shape (Parabola-ish)
+                    // Base TQ * Modifier based on RPM distance from peak
+                    let torqueFactor = 1 - Math.pow((currentRpm - peakTqRpm) / 5500, 2);
+                    if (mods.turbo && currentRpm < 3000) torqueFactor *= 0.6; // Turbo lag
+                    
+                    let simTq = stats.tq * torqueFactor;
+                    let simHp = (simTq * currentRpm) / 5252;
+
+                    // Add some noise
+                    simTq += (Math.random() - 0.5) * 10;
+                    simHp += (Math.random() - 0.5) * 5;
+
+                    setData(prev => [...prev, { 
+                        rpm: currentRpm, 
+                        hp: Math.max(0, Math.round(simHp)), 
+                        tq: Math.max(0, Math.round(simTq)) 
+                    }]);
+                    
+                    setRpm(currentRpm);
+
+                    if (currentRpm >= maxRpm) {
+                        clearInterval(interval);
+                        setDynoStatus('finished');
+                        setRpm(0);
+                        addLog(`RUN COMPLETE. PEAK HP: ${stats.hp}`);
+                    }
+                }, 50); // 50ms refresh rate
+            };
+
+            const toggleMod = (mod) => setMods({ ...mods, [mod]: !mods[mod] });
+
+            return (
+                <div className="flex h-screen w-full bg-black text-white overflow-hidden">
+                    
+                    {/* LEFT SIDEBAR - CAR LIST */}
+                    <div className="w-80 flex flex-col border-r border-neutral-900 bg-neutral-950 z-20 shadow-2xl">
+                        <div className="p-6 border-b border-neutral-900 bg-neutral-900/50">
+                            <h1 className="text-2xl font-black italic tracking-tighter text-cyan-400 flex items-center gap-2">
+                                <Zap className="fill-cyan-400" /> HYPER<span className="text-white">TUNER</span>
+                            </h1>
+                            <div className="text-[10px] text-neutral-500 font-mono mt-1 tracking-widest">BUILD V2.0 // CONNECTED</div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                            <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 sticky top-0 bg-neutral-950 py-2">Select Chassis</div>
+                            {CAR_DB.map(car => (
+                                <button 
+                                    key={car.id}
+                                    onClick={() => { setSelectedCar(car); setDynoStatus('idle'); setData([]); }}
+                                    className={`w-full text-left p-3 rounded border transition-all duration-200 group relative overflow-hidden ${
+                                        selectedCar.id === car.id 
+                                        ? 'border-cyan-500 bg-cyan-950/30 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
+                                        : 'border-neutral-800 bg-neutral-900/30 text-neutral-400 hover:border-neutral-600 hover:text-white'
+                                    }`}
+                                >
+                                    <div className="relative z-10 flex justify-between items-center">
+                                        <div>
+                                            <div className="font-bold text-sm">{car.name}</div>
+                                            <div className="text-[10px] opacity-60 font-mono mt-0.5">{car.hp} HP | {car.type}</div>
+                                        </div>
+                                        {selectedCar.id === car.id && <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>}
+                                    </div>
+                                    {/* Background fill animation */}
+                                    <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-cyan-900/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000`} />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* MAIN CONTENT */}
+                    <div className="flex-1 flex flex-col relative cyber-grid">
+                        
+                        {/* 3D VIEWPORT */}
+                        <div className="h-[55%] relative w-full">
+                            <div className="absolute top-4 left-4 z-10 pointer-events-none">
+                                <h2 className="text-4xl font-black uppercase italic opacity-20 select-none">{selectedCar.name}</h2>
+                            </div>
+                            
+                            <Canvas shadows dpr={[1, 2]}>
+                                <Scene car={selectedCar} isRevving={dynoStatus === 'running'} />
+                            </Canvas>
+
+                            {/* Floating Stats in 3D View */}
+                            <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-none">
+                                <div className="bg-black/50 backdrop-blur border border-neutral-800 p-4 rounded min-w-[200px]">
+                                    <div className="text-xs text-neutral-400 font-mono uppercase">Current Spec</div>
+                                    <div className="flex justify-between items-end mt-2">
+                                        <span className="text-2xl font-bold text-cyan-400">{stats.hp}</span>
+                                        <span className="text-xs text-neutral-500 mb-1">HORSEPOWER</span>
+                                    </div>
+                                    <div className="w-full h-1 bg-neutral-800 mt-1 rounded-full overflow-hidden">
+                                        <div className="h-full bg-cyan-400" style={{ width: `${(stats.hp/1000)*100}%` }}></div>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-end mt-4">
+                                        <span className="text-2xl font-bold text-pink-500">{stats.tq}</span>
+                                        <span className="text-xs text-neutral-500 mb-1">TORQUE</span>
+                                    </div>
+                                    <div className="w-full h-1 bg-neutral-800 mt-1 rounded-full overflow-hidden">
+                                        <div className="h-full bg-pink-500" style={{ width: `${(stats.tq/1000)*100}%` }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* BOTTOM PANEL - MODS & DYNO */}
+                        <div className="flex-1 bg-neutral-950 border-t border-neutral-800 flex flex-col md:flex-row backdrop-blur-xl">
+                            
+                            {/* MODS PANEL */}
+                            <div className="w-full md:w-1/3 p-6 border-r border-neutral-900">
+                                <div className="flex items-center gap-2 mb-4 text-cyan-400">
+                                    <Settings size={18} />
+                                    <h3 className="font-bold text-sm tracking-widest uppercase">Performance Parts</h3>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 gap-2">
+                                    {[
+                                        { id: 'tune', label: 'Stage 2 ECU Tune', gain: '+15% HP', icon: <Activity size={16}/> },
+                                        { id: 'turbo', label: 'Hybrid Turbo Upgrade', gain: '+25% HP', icon: <Wind size={16}/> },
+                                        { id: 'exhaust', label: 'Titanium Exhaust', gain: '+5% HP', icon: <CircleDashed size={16}/> },
+                                        { id: 'e85', label: 'E85 Fuel System', gain: '+12% HP', icon: <Zap size={16}/> },
+                                    ].map(mod => (
+                                        <button 
+                                            key={mod.id}
+                                            onClick={() => toggleMod(mod.id)}
+                                            className={`flex items-center justify-between p-3 rounded border transition-all ${
+                                                mods[mod.id] 
+                                                ? 'bg-green-500/10 border-green-500/50 text-green-400' 
+                                                : 'bg-neutral-900 border-neutral-800 text-neutral-500 hover:border-neutral-600'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {mod.icon}
+                                                <span className="font-semibold text-sm">{mod.label}</span>
+                                            </div>
+                                            <span className="text-xs font-mono opacity-70">{mod.gain}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* DYNO CHART AREA */}
+                            <div className="flex-1 p-6 relative flex flex-col">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-2 text-pink-500">
+                                        <Activity size={18} />
+                                        <h3 className="font-bold text-sm tracking-widest uppercase">Dynojet Simulation</h3>
+                                    </div>
+                                    
+                                    <div className="flex gap-2">
+                                         <button 
+                                            onClick={runDyno}
+                                            disabled={dynoStatus === 'running'}
+                                            className={`px-6 py-2 rounded font-bold uppercase tracking-widest text-sm flex items-center gap-2 transition-all ${
+                                                dynoStatus === 'running'
+                                                ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                                            }`}
+                                        >
+                                            {dynoStatus === 'running' ? 'DYNO RUNNING...' : <><Play size={16} fill="currentColor" /> START RUN</>}
+                                        </button>
+                                        
+                                        <button 
+                                            onClick={() => { setData([]); setLogs([]); setDynoStatus('idle'); }}
+                                            className="p-2 rounded bg-neutral-900 border border-neutral-800 hover:border-neutral-600 text-neutral-400"
+                                        >
+                                            <RotateCcw size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 bg-neutral-900/50 rounded border border-neutral-800 relative overflow-hidden">
+                                    {/* LOGS OVERLAY */}
+                                    <div className="absolute top-4 left-4 font-mono text-[10px] text-green-500 pointer-events-none z-10 opacity-80">
+                                        {logs.map((log, i) => (
+                                            <div key={i}>{log}</div>
+                                        ))}
+                                    </div>
+
+                                    {/* BIG RPM DISPLAY */}
+                                    <div className="absolute bottom-4 right-4 text-right pointer-events-none z-10">
+                                        <div className="text-6xl font-black text-neutral-800">{rpm} <span className="text-lg font-medium">RPM</span></div>
+                                    </div>
+
+                                    {data.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="hpGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                                                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                                                <XAxis dataKey="rpm" stroke="#444" tick={{fontSize: 10, fill: '#666'}} />
+                                                <YAxis stroke="#444" tick={{fontSize: 10, fill: '#666'}} />
+                                                <RechartsTooltip 
+                                                    contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '4px' }}
+                                                    itemStyle={{ fontSize: '12px' }}
+                                                />
+                                                <Area type="monotone" dataKey="hp" stroke="#06b6d4" strokeWidth={3} fill="url(#hpGradient)" name="HP" isAnimationActive={false} />
+                                                <Line type="monotone" dataKey="tq" stroke="#ec4899" strokeWidth={2} dot={false} strokeDasharray="5 5" name="TQ" isAnimationActive={false} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="h-full flex flex-col items-center justify-center text-neutral-700">
+                                            <Activity size={48} className="mb-2 opacity-20" />
+                                            <p className="text-xs font-mono uppercase tracking-widest">System Ready. Awaiting Input.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
