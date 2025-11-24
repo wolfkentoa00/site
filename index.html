@@ -5,33 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HYPER-TUNER | 3D Car Configurator & Dyno</title>
     
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Three.js & React Three Fiber -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-                "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.12?external=react,react-dom,three",
-                "@react-three/drei": "https://esm.sh/@react-three/drei@9.96.1?external=react,react-dom,three,@react-three/fiber",
-                "recharts": "https://esm.sh/recharts@2.10.3?external=react,react-dom",
-                "lucide-react": "https://esm.sh/lucide-react@0.294.0?external=react,react-dom"
-            }
-        }
-    </script>
+    <!-- Babel for JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;900&display=swap');
         
-        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        body { margin: 0; background: #050505; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         
         /* Custom Scrollbar */
@@ -44,6 +27,18 @@
         .neon-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.7); }
         .neon-border { box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); }
         
+        /* Loading Animation */
+        .loader {
+            border: 4px solid #333;
+            border-top: 4px solid #06b6d4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         /* Grid Background */
         .cyber-grid {
             background-image: linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
@@ -51,16 +46,37 @@
             background-size: 40px 40px;
         }
     </style>
+
+    <!-- FIXED IMPORT MAP: Ensures all libraries share the exact same React instance -->
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@18.2.0",
+                "react-dom": "https://esm.sh/react-dom@18.2.0",
+                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+                "three": "https://esm.sh/three@0.161.0",
+                "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.16?external=react,react-dom,three",
+                "@react-three/drei": "https://esm.sh/@react-three/drei@9.102.0?external=react,react-dom,three,@react-three/fiber",
+                "recharts": "https://esm.sh/recharts@2.12.2?external=react,react-dom",
+                "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react,react-dom"
+            }
+        }
+    </script>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root" class="h-screen w-screen flex items-center justify-center">
+        <div class="text-center">
+            <div class="loader mb-4"></div>
+            <div class="text-xs font-mono text-cyan-500 tracking-widest">INITIALIZING HYPER-TUNER...</div>
+        </div>
+    </div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef, useMemo } from 'react';
+        import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
         import { createRoot } from 'react-dom/client';
         import * as THREE from 'three';
         import { Canvas, useFrame } from '@react-three/fiber';
-        import { OrbitControls, Stage, PerspectiveCamera, Environment, Grid, Stars } from '@react-three/drei';
+        import { OrbitControls, Stage, PerspectiveCamera, Environment, Grid, Stars, ContactShadows } from '@react-three/drei';
         import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
         import { Gauge, Zap, Activity, Settings, Play, RotateCcw, Trophy, Wind, CircleDashed } from 'lucide-react';
 
@@ -109,22 +125,26 @@
             useEffect(() => {
                 // Initialize Audio Context on user interaction (handled by Play button usually)
                 if (!audioCtxRef.current && isRunning) {
-                    audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-                    const ctx = audioCtxRef.current;
-                    
-                    // Engine rumble (Sawtooth)
-                    const osc = ctx.createOscillator();
-                    osc.type = 'sawtooth';
-                    
-                    const gain = ctx.createGain();
-                    gain.gain.value = 0.1;
-                    
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    
-                    osc.start();
-                    oscRef.current = osc;
-                    gainRef.current = gain;
+                    try {
+                        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                        const ctx = audioCtxRef.current;
+                        
+                        // Engine rumble (Sawtooth)
+                        const osc = ctx.createOscillator();
+                        osc.type = 'sawtooth';
+                        
+                        const gain = ctx.createGain();
+                        gain.gain.value = 0.1;
+                        
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        
+                        osc.start();
+                        oscRef.current = osc;
+                        gainRef.current = gain;
+                    } catch (e) {
+                        console.error("Audio Context Failed:", e);
+                    }
                 }
 
                 // Update pitch based on RPM
@@ -146,7 +166,7 @@
                 
                 return () => {
                    if (!isRunning && oscRef.current) {
-                        oscRef.current.stop();
+                        try { oscRef.current.stop(); } catch(e) {}
                    }
                 }
             }, [rpm, isRunning]);
@@ -272,11 +292,16 @@
                     <ambientLight intensity={0.5} />
                     <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={100} castShadow />
                     <pointLight position={[-10, -10, -10]} intensity={1} color="#06b6d4" />
-                    <Environment preset="city" />
+                    
+                    {/* Safe Environment Fallback */}
+                    <Suspense fallback={null}>
+                         <Environment preset="city" />
+                    </Suspense>
 
                     <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
                     
                     <Grid infiniteGrid fadeDistance={30} sectionColor="#06b6d4" cellColor="#1e293b" />
+                    <ContactShadows resolution={1024} scale={10} blur={1.5} opacity={0.5} far={10} color="#000" />
 
                     <CyberCar 
                         color={car.color} 
