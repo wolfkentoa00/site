@@ -208,14 +208,13 @@
             const springRef = useRef();
             
             useFrame(() => {
+                if (!valveRef.current || !springRef.current) return;
                 const isOpen = liftRef.current > 0.8;
-                if(valveRef.current) {
-                    const targetY = isOpen ? -0.15 : 0;
-                    valveRef.current.position.y += (targetY - valveRef.current.position.y) * 0.3;
-                }
-                if(springRef.current) {
-                    springRef.current.scale.y = isOpen ? 0.7 : 1.0;
-                }
+                
+                const targetY = isOpen ? -0.15 : 0;
+                valveRef.current.position.y += (targetY - valveRef.current.position.y) * 0.3;
+                
+                springRef.current.scale.y = isOpen ? 0.7 : 1.0;
             });
 
             return (
@@ -253,6 +252,8 @@
             const flameActiveRef = useRef(false);
 
             useFrame((state, delta) => {
+                if (!pistonRef.current || !rodRef.current) return;
+
                 const step = (rpm / 60) * Math.PI * 2 * delta * timeScale;
                 engineTime.current += step;
                 
@@ -271,14 +272,16 @@
 
                 // Combustion Flash
                 const isCombustion = rpm > 100 && pistonCycle > 0.95 && intakeLiftRef.current < 0.8 && exhaustLiftRef.current < 0.8;
-                if (isCombustion) {
-                    materialRef.current.color.set('#ff5500');
-                    materialRef.current.emissive.set('#ff2200');
-                    materialRef.current.emissiveIntensity = 4;
-                } else {
-                    materialRef.current.color.lerp(new THREE.Color('#888'), 0.2);
-                    materialRef.current.emissive.lerp(new THREE.Color('#000'), 0.2);
-                    materialRef.current.emissiveIntensity = 0;
+                if (materialRef.current) {
+                    if (isCombustion) {
+                        materialRef.current.color.set('#ff5500');
+                        materialRef.current.emissive.set('#ff2200');
+                        materialRef.current.emissiveIntensity = 4;
+                    } else {
+                        materialRef.current.color.lerp(new THREE.Color('#888'), 0.2);
+                        materialRef.current.emissive.lerp(new THREE.Color('#000'), 0.2);
+                        materialRef.current.emissiveIntensity = 0;
+                    }
                 }
 
                 // Flame Logic
