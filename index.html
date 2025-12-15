@@ -6,9 +6,9 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="VisionOS">
+    <meta name="apple-mobile-web-app-title" content="ReflectOS">
 
-    <title>Vision Glass</title>
+    <title>Reflective Vision</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -17,7 +17,7 @@
             /* Physics Variables */
             --light-x: 50%;
             --light-y: 50%;
-            --glow-opacity: 0.5;
+            --shine-angle: 135deg; /* Angle of the light across icons */
             --rot-x: 0deg;
             --rot-y: 0deg;
             --shadow-x: 0px;
@@ -38,145 +38,135 @@
             justify-content: center;
         }
 
-        /* 1. The Premium Wallpaper (Deep & Abstract) */
+        /* 1. Deep Atmosphere Wallpaper */
         .wallpaper {
             position: absolute;
-            width: 140%;
-            height: 140%;
+            width: 150%;
+            height: 150%;
             background: radial-gradient(circle at 50% 50%, 
-                #1a2a6c, #b21f1f, #fdbb2d); 
+                #2b32b2, #1488cc, #000000 80%); 
             background-size: 200% 200%;
-            filter: blur(60px); /* Deep bokeh effect */
             z-index: 0;
-            animation: breathe 10s ease-in-out infinite alternate;
         }
 
-        @keyframes breathe {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-
-        /* 2. The 3D Container */
         .dock-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
+            gap: 25px;
             padding: 30px;
             z-index: 10;
-            
-            /* Global Tilt of the plane */
             transform-style: preserve-3d;
-            transform: perspective(1000px) rotateX(var(--rot-x)) rotateY(var(--rot-y));
-            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); /* Apple's smoothing curve */
+            transform: perspective(800px) rotateX(var(--rot-x)) rotateY(var(--rot-y));
+            transition: transform 0.1s linear; /* Fast response for crisp reflection */
         }
 
-        /* 3. The "Vision Pro" Glass Icon */
+        /* 2. The Glass Block */
         .glass-icon {
-            width: 110px;
-            height: 110px;
-            border-radius: 34px; /* Apple's exact Squircle radius */
+            width: 115px;
+            height: 115px;
+            border-radius: 36px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
             
-            /* The Material: Heavy Frost */
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            /* Glass Material */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             
-            /* Dynamic Shadow that moves opposite to tilt */
+            /* Dynamic Shadow */
             box-shadow: 
-                var(--shadow-x) var(--shadow-y) 30px rgba(0,0,0,0.5),
-                inset 0 0 0 1px rgba(255,255,255,0.1); /* Subtle stroke */
+                var(--shadow-x) var(--shadow-y) 30px rgba(0,0,0,0.6),
+                inset 0 0 0 1px rgba(255,255,255,0.15);
             
             overflow: hidden;
         }
 
-        /* 4. The Specular Highlight (The "Glint") 
-           This is the shiny edge that rotates around the icon */
+        /* 3. The Icon Reflection Logic */
+        .fa-icon {
+            font-size: 48px;
+            margin-bottom: 0px;
+            
+            /* This is how we make the ICON itself reflect light */
+            background: linear-gradient(
+                var(--shine-angle), 
+                var(--brand-color) 0%, 
+                #ffffff 45%,      /* The Shine Line */
+                var(--brand-color) 55%, 
+                var(--brand-color) 100%
+            );
+            
+            /* Stretch background so we can move it */
+            background-size: 200% 200%;
+            
+            /* Move the background based on tilt variables */
+            background-position: var(--light-x) var(--light-y);
+            
+            /* Clip the background to the text (icon shape) */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            
+            /* Add depth drop-shadow BEHIND the transparent text */
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+            
+            /* Smooth movement */
+            transition: background-position 0.1s ease-out;
+        }
+
+        /* 4. Brand Specific Colors (defined as variables for the gradient) */
+        .snap { --brand-color: #FFFC00; }
+        .tiktok { --brand-color: #00f2ea; } /* simplified for gradient support */
+        .yt { --brand-color: #ff0000; }
+        .camera { --brand-color: #eeeeee; }
+
+        /* Label Text */
+        .label {
+            position: absolute;
+            bottom: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+
+        /* 5. Edge Glint on the Glass Block */
         .glass-icon::after {
             content: '';
             position: absolute;
             inset: 0;
-            border-radius: 34px;
-            padding: 2px; /* Border thickness */
+            border-radius: 36px;
+            padding: 2px;
             
-            /* The gradient mask creates the "Shiny Edge" effect */
             background: radial-gradient(
                 circle at var(--light-x) var(--light-y), 
-                rgba(255, 255, 255, 1) 0%, 
-                rgba(255, 255, 255, 0) 40%
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(255, 255, 255, 0) 35%
             );
             
-            /* Mask logic to keep only the border visible */
-            -webkit-mask: 
-                linear-gradient(#fff 0 0) content-box, 
-                linear-gradient(#fff 0 0);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
-            
             opacity: 1;
             pointer-events: none;
         }
-
-        /* 5. The "Inner Light" (Liquid Volume) */
-        .inner-light {
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(
-                circle at var(--light-x) var(--light-y), 
-                rgba(255, 255, 255, 0.4), 
-                transparent 50%
-            );
-            mix-blend-mode: overlay; /* Blends nicely with color */
-            pointer-events: none;
-        }
-
-        /* 6. The Floating Icon Content */
-        .content-layer {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 5;
-            transform: translateZ(30px); /* Lifts icon 30px off the glass */
-        }
-
-        .fa-icon {
-            font-size: 44px;
-            margin-bottom: 6px;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
-        }
-
-        .label {
-            font-size: 13px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.9);
-            letter-spacing: 0.3px;
-        }
-
-        /* Brand Colors */
-        .snap { color: #FFFC00; }
-        .tiktok { background: -webkit-linear-gradient(#00f2ea, #ff0050); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .yt { color: #ff3b30; }
-        .camera { color: #e5e5e5; }
 
         /* Activation Button */
         #start-btn {
             position: absolute;
             bottom: 80px;
-            padding: 16px 32px;
-            background: rgba(20, 20, 20, 0.6);
+            padding: 14px 28px;
+            background: rgba(255,255,255,0.15);
             color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 50px;
-            backdrop-filter: blur(20px);
-            font-size: 16px;
-            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 40px;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
             z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
     </style>
@@ -188,40 +178,28 @@
     <div class="dock-container">
         
         <a href="snapchat://" class="glass-icon">
-            <div class="inner-light"></div>
-            <div class="content-layer">
-                <i class="fab fa-snapchat-ghost fa-icon snap"></i>
-                <span class="label">Snapchat</span>
-            </div>
+            <i class="fab fa-snapchat-ghost fa-icon snap"></i>
+            <span class="label">Snap</span>
         </a>
 
         <a href="tiktok://" class="glass-icon">
-            <div class="inner-light"></div>
-            <div class="content-layer">
-                <i class="fab fa-tiktok fa-icon tiktok"></i>
-                <span class="label">TikTok</span>
-            </div>
+            <i class="fab fa-tiktok fa-icon tiktok"></i>
+            <span class="label">TikTok</span>
         </a>
 
         <a href="youtube://" class="glass-icon">
-            <div class="inner-light"></div>
-            <div class="content-layer">
-                <i class="fab fa-youtube fa-icon yt"></i>
-                <span class="label">YouTube</span>
-            </div>
+            <i class="fab fa-youtube fa-icon yt"></i>
+            <span class="label">YouTube</span>
         </a>
 
         <a href="instagram://story-camera" class="glass-icon">
-            <div class="inner-light"></div>
-            <div class="content-layer">
-                <i class="fas fa-camera fa-icon camera"></i>
-                <span class="label">Camera</span>
-            </div>
+            <i class="fas fa-camera fa-icon camera"></i>
+            <span class="label">Camera</span>
         </a>
 
     </div>
 
-    <button id="start-btn" onclick="initGyro()">Enable Vision Effect</button>
+    <button id="start-btn" onclick="initGyro()">Enable Reflection</button>
 
     <script>
         function initGyro() {
@@ -240,63 +218,59 @@
             }
         }
 
-        // SMOOTHING VARIABLES (To make it feel like heavy liquid)
-        let currentX = 0;
-        let currentY = 0;
-        let targetX = 0;
-        let targetY = 0;
+        let currentX = 0, currentY = 0;
+        let targetX = 0, targetY = 0;
 
-        // Animation Loop for Physics
+        // Smooth Animation Loop
         function animate() {
-            // Lerp (Linear Interpolation) creates the "Viscous/Heavy" lag
-            // 0.1 = Very heavy/slow, 0.9 = Very fast/snappy
-            currentX += (targetX - currentX) * 0.15;
-            currentY += (targetY - currentY) * 0.15;
+            // "Heavy" easing for that premium feel
+            currentX += (targetX - currentX) * 0.1;
+            currentY += (targetY - currentY) * 0.1;
 
             const root = document.documentElement;
 
-            // 1. Move the Light Source (Specular Glint)
-            // Range 0% to 100%
-            const lightX = 50 + (currentX * 1.5);
-            const lightY = 50 + (currentY * 1.5);
-            
-            // 2. Rotate the Container (3D Depth)
-            const rotY = (currentX / 4).toFixed(2); // Tilt Left/Right
-            const rotX = (-currentY / 4).toFixed(2); // Tilt Up/Down
+            // 1. Calculate Light Position (0% to 100%)
+            // This moves the reflection across the ICON and the GLASS EDGE
+            const lightX = 50 + (currentX * 1.2); 
+            const lightY = 50 + (currentY * 1.2);
 
-            // 3. Cast Shadow Opposite to Light
-            const shadowX = (currentX * -1).toFixed(1);
-            const shadowY = (currentY * -1 + 10).toFixed(1); // +10 for default down-shadow
+            // 2. Calculate Shine Angle (rotates the reflection line)
+            const angle = 135 + (currentX / 2);
 
-            // Apply Styles
+            // 3. Tilt the container
+            const rotY = (currentX / 5).toFixed(2);
+            const rotX = (-currentY / 5).toFixed(2);
+
+            // 4. Shadow Offset
+            const shadowX = (currentX * -0.8).toFixed(1);
+            const shadowY = (currentY * -0.8 + 10).toFixed(1);
+
+            // Update CSS
             root.style.setProperty('--light-x', `${lightX}%`);
             root.style.setProperty('--light-y', `${lightY}%`);
+            root.style.setProperty('--shine-angle', `${angle}deg`);
+            
             root.style.setProperty('--rot-x', `${rotX}deg`);
             root.style.setProperty('--rot-y', `${rotY}deg`);
+            
             root.style.setProperty('--shadow-x', `${shadowX}px`);
             root.style.setProperty('--shadow-y', `${shadowY}px`);
 
             requestAnimationFrame(animate);
         }
 
-        // Start Animation Loop
         animate();
 
         function handleMotion(event) {
-            // Capture raw tilt data
-            // Gamma: Left/Right (-90 to 90)
-            // Beta: Front/Back (-180 to 180)
-            let x = event.gamma; 
-            let y = event.beta;
+            let x = event.gamma; // Left/Right
+            let y = event.beta;  // Front/Back
+            y = y - 45; // Calibration
 
-            // Calibration (Holding phone at 45 degrees is "zero")
-            y = y - 45;
-
-            // Clamp values so it doesn't break at extreme angles
-            if (x > 40) x = 40;
-            if (x < -40) x = -40;
-            if (y > 40) y = 40;
-            if (y < -40) y = -40;
+            // Constraints
+            if (x > 45) x = 45;
+            if (x < -45) x = -45;
+            if (y > 45) y = 45;
+            if (y < -45) y = -45;
 
             targetX = x;
             targetY = y;
