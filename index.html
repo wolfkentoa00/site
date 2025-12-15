@@ -6,21 +6,22 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Liquid OS">
+    <meta name="apple-mobile-web-app-title" content="VisionOS">
 
-    <title>Liquid Motion</title>
+    <title>Vision Glass</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            /* Variables controlled by JS */
-            --shimmer-x: 50%;
-            --shimmer-y: 50%;
-            --rim-x: 2px;
-            --rim-y: 2px;
-            --tilt-x: 0deg;
-            --tilt-y: 0deg;
+            /* Physics Variables */
+            --light-x: 50%;
+            --light-y: 50%;
+            --glow-opacity: 0.5;
+            --rot-x: 0deg;
+            --rot-y: 0deg;
+            --shadow-x: 0px;
+            --shadow-y: 10px;
         }
 
         body {
@@ -29,7 +30,7 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, SF Pro Display, sans-serif;
             background: #000;
             display: flex;
             flex-direction: column;
@@ -37,191 +38,268 @@
             justify-content: center;
         }
 
-        /* Dark Fluid Background */
-        .ambient-bg {
+        /* 1. The Premium Wallpaper (Deep & Abstract) */
+        .wallpaper {
             position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle at var(--shimmer-x) var(--shimmer-y), 
-                        rgba(50, 100, 255, 0.3), 
-                        rgba(255, 50, 150, 0.2), 
-                        rgba(0, 0, 0, 1) 60%);
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(circle at 50% 50%, 
+                #1a2a6c, #b21f1f, #fdbb2d); 
+            background-size: 200% 200%;
+            filter: blur(60px); /* Deep bokeh effect */
             z-index: 0;
-            transition: background 0.1s linear;
+            animation: breathe 10s ease-in-out infinite alternate;
         }
 
-        .grid {
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* 2. The 3D Container */
+        .dock-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            z-index: 2;
-            padding: 20px;
-            /* 3D Perspective Tilt */
-            transform: perspective(600px) rotateX(var(--tilt-y)) rotateY(var(--tilt-x));
-            transition: transform 0.1s linear;
+            gap: 24px;
+            padding: 30px;
+            z-index: 10;
+            
+            /* Global Tilt of the plane */
+            transform-style: preserve-3d;
+            transform: perspective(1000px) rotateX(var(--rot-x)) rotateY(var(--rot-y));
+            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); /* Apple's smoothing curve */
         }
 
-        /* --- THE LIQUID BUTTON --- */
-        .liquid-card {
-            width: 120px;
-            height: 120px;
-            border-radius: 38px; /* Squircle */
-            
+        /* 3. The "Vision Pro" Glass Icon */
+        .glass-icon {
+            width: 110px;
+            height: 110px;
+            border-radius: 34px; /* Apple's exact Squircle radius */
+            position: relative;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            position: relative;
             
-            /* No Static Border - We use box-shadow for edges */
-            background: rgba(255, 255, 255, 0.03); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            /* The Material: Heavy Frost */
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
             
-            /* DYNAMIC RIM LIGHTING
-               The values var(--rim-x) change based on tilt.
-               This creates the "Edge Lighting" effect. */
+            /* Dynamic Shadow that moves opposite to tilt */
             box-shadow: 
-                inset var(--rim-x) var(--rim-y) 15px rgba(255, 255, 255, 0.6), /* Moving Highlight */
-                inset calc(var(--rim-x) * -1) calc(var(--rim-y) * -1) 20px rgba(0,0,0,0.5), /* Moving Shadow */
-                0 15px 30px rgba(0,0,0,0.5); /* Drop Shadow */
-                
+                var(--shadow-x) var(--shadow-y) 30px rgba(0,0,0,0.5),
+                inset 0 0 0 1px rgba(255,255,255,0.1); /* Subtle stroke */
+            
             overflow: hidden;
-            transition: box-shadow 0.1s linear;
         }
 
-        /* The "Water" Slosh Effect */
-        .liquid-card::before {
+        /* 4. The Specular Highlight (The "Glint") 
+           This is the shiny edge that rotates around the icon */
+        .glass-icon::after {
             content: '';
             position: absolute;
-            top: -50%; left: -50%; right: -50%; bottom: -50%;
+            inset: 0;
+            border-radius: 34px;
+            padding: 2px; /* Border thickness */
             
-            /* This gradient moves wildly to simulate water sloshing */
+            /* The gradient mask creates the "Shiny Edge" effect */
             background: radial-gradient(
-                70% 70% at var(--shimmer-x) var(--shimmer-y), 
-                rgba(255, 255, 255, 0.5) 0%,   /* Bright center */
-                rgba(255, 255, 255, 0.1) 30%,  /* Fade */
-                transparent 70%
+                circle at var(--light-x) var(--light-y), 
+                rgba(255, 255, 255, 1) 0%, 
+                rgba(255, 255, 255, 0) 40%
             );
             
-            opacity: 0.8;
+            /* Mask logic to keep only the border visible */
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            
+            opacity: 1;
             pointer-events: none;
-            mix-blend-mode: overlay;
-            filter: blur(8px); /* Softens the light to look like liquid */
         }
 
-        .icon { 
-            font-size: 45px; 
-            margin-bottom: 5px; 
-            z-index: 2;
-            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));
-            transform: translateZ(20px); /* Lifts icon off glass */
-        }
-        
-        .label { 
-            font-size: 12px; 
-            color: rgba(255,255,255,0.8); 
-            font-weight: 600; 
-            z-index: 2;
-        }
-
-        /* Brand Styles */
-        .snap { color: #FFFC00; }
-        .tiktok { color: #00f2ea; text-shadow: 2px 2px #ff0050; }
-        .yt { color: #ff0000; }
-        .camera { color: #eeeeee; }
-
-        /* Start Button */
-        #perm-btn {
+        /* 5. The "Inner Light" (Liquid Volume) */
+        .inner-light {
             position: absolute;
-            bottom: 60px;
-            z-index: 10;
-            padding: 15px 30px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 50px;
-            backdrop-filter: blur(10px);
-            font-size: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(
+                circle at var(--light-x) var(--light-y), 
+                rgba(255, 255, 255, 0.4), 
+                transparent 50%
+            );
+            mix-blend-mode: overlay; /* Blends nicely with color */
+            pointer-events: none;
         }
+
+        /* 6. The Floating Icon Content */
+        .content-layer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+            transform: translateZ(30px); /* Lifts icon 30px off the glass */
+        }
+
+        .fa-icon {
+            font-size: 44px;
+            margin-bottom: 6px;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+        }
+
+        .label {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.3px;
+        }
+
+        /* Brand Colors */
+        .snap { color: #FFFC00; }
+        .tiktok { background: -webkit-linear-gradient(#00f2ea, #ff0050); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .yt { color: #ff3b30; }
+        .camera { color: #e5e5e5; }
+
+        /* Activation Button */
+        #start-btn {
+            position: absolute;
+            bottom: 80px;
+            padding: 16px 32px;
+            background: rgba(20, 20, 20, 0.6);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50px;
+            backdrop-filter: blur(20px);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="ambient-bg"></div>
+    <div class="wallpaper"></div>
 
-    <div class="grid">
-        <a href="snapchat://" class="liquid-card">
-            <i class="fab fa-snapchat-ghost icon snap"></i>
-            <span class="label">Snap</span>
+    <div class="dock-container">
+        
+        <a href="snapchat://" class="glass-icon">
+            <div class="inner-light"></div>
+            <div class="content-layer">
+                <i class="fab fa-snapchat-ghost fa-icon snap"></i>
+                <span class="label">Snapchat</span>
+            </div>
         </a>
-        <a href="tiktok://" class="liquid-card">
-            <i class="fab fa-tiktok icon tiktok"></i>
-            <span class="label">TikTok</span>
+
+        <a href="tiktok://" class="glass-icon">
+            <div class="inner-light"></div>
+            <div class="content-layer">
+                <i class="fab fa-tiktok fa-icon tiktok"></i>
+                <span class="label">TikTok</span>
+            </div>
         </a>
-        <a href="youtube://" class="liquid-card">
-            <i class="fab fa-youtube icon yt"></i>
-            <span class="label">YouTube</span>
+
+        <a href="youtube://" class="glass-icon">
+            <div class="inner-light"></div>
+            <div class="content-layer">
+                <i class="fab fa-youtube fa-icon yt"></i>
+                <span class="label">YouTube</span>
+            </div>
         </a>
-        <a href="instagram://story-camera" class="liquid-card">
-            <i class="fas fa-camera icon camera"></i>
-            <span class="label">Camera</span>
+
+        <a href="instagram://story-camera" class="glass-icon">
+            <div class="inner-light"></div>
+            <div class="content-layer">
+                <i class="fas fa-camera fa-icon camera"></i>
+                <span class="label">Camera</span>
+            </div>
         </a>
+
     </div>
 
-    <button id="perm-btn" onclick="requestMotion()">ACTIVATE LIQUID</button>
+    <button id="start-btn" onclick="initGyro()">Enable Vision Effect</button>
 
     <script>
-        function requestMotion() {
+        function initGyro() {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
                         if (permissionState === 'granted') {
-                            document.getElementById('perm-btn').style.display = 'none';
-                            window.addEventListener('deviceorientation', handleOrientation);
+                            document.getElementById('start-btn').style.display = 'none';
+                            window.addEventListener('deviceorientation', handleMotion);
                         }
                     })
                     .catch(console.error);
             } else {
-                document.getElementById('perm-btn').style.display = 'none';
-                window.addEventListener('deviceorientation', handleOrientation);
+                document.getElementById('start-btn').style.display = 'none';
+                window.addEventListener('deviceorientation', handleMotion);
             }
         }
 
-        function handleOrientation(event) {
-            const x = event.gamma; // Tilt Left/Right
-            const y = event.beta;  // Tilt Front/Back
+        // SMOOTHING VARIABLES (To make it feel like heavy liquid)
+        let currentX = 0;
+        let currentY = 0;
+        let targetX = 0;
+        let targetY = 0;
 
-            // 1. Calculate Rim Light (The Edge Effect)
-            // If you tilt Left (negative x), Rim light appears on Right edge.
-            const rimX = (x / 3) * -1; 
-            const rimY = ((y - 45) / 3) * -1;
-
-            // 2. Calculate Liquid Center (Sloshing)
-            // Multiplied by 2.0 to make the water move FAST inside the glass
-            const shimmerX = 50 + (x * 2.0); 
-            const shimmerY = 50 + ((y - 45) * 2.5);
-
-            // 3. Grid Tilt
-            const tiltX = (x / 10).toFixed(2);
-            const tiltY = ((y - 45) / 10).toFixed(2);
+        // Animation Loop for Physics
+        function animate() {
+            // Lerp (Linear Interpolation) creates the "Viscous/Heavy" lag
+            // 0.1 = Very heavy/slow, 0.9 = Very fast/snappy
+            currentX += (targetX - currentX) * 0.15;
+            currentY += (targetY - currentY) * 0.15;
 
             const root = document.documentElement;
 
-            // Update CSS
-            root.style.setProperty('--rim-x', `${rimX}px`);
-            root.style.setProperty('--rim-y', `${rimY}px`);
+            // 1. Move the Light Source (Specular Glint)
+            // Range 0% to 100%
+            const lightX = 50 + (currentX * 1.5);
+            const lightY = 50 + (currentY * 1.5);
             
-            root.style.setProperty('--shimmer-x', `${shimmerX}%`);
-            root.style.setProperty('--shimmer-y', `${shimmerY}%`);
-            
-            root.style.setProperty('--tilt-x', `${tiltX}deg`);
-            root.style.setProperty('--tilt-y', `${-tiltY}deg`);
+            // 2. Rotate the Container (3D Depth)
+            const rotY = (currentX / 4).toFixed(2); // Tilt Left/Right
+            const rotX = (-currentY / 4).toFixed(2); // Tilt Up/Down
+
+            // 3. Cast Shadow Opposite to Light
+            const shadowX = (currentX * -1).toFixed(1);
+            const shadowY = (currentY * -1 + 10).toFixed(1); // +10 for default down-shadow
+
+            // Apply Styles
+            root.style.setProperty('--light-x', `${lightX}%`);
+            root.style.setProperty('--light-y', `${lightY}%`);
+            root.style.setProperty('--rot-x', `${rotX}deg`);
+            root.style.setProperty('--rot-y', `${rotY}deg`);
+            root.style.setProperty('--shadow-x', `${shadowX}px`);
+            root.style.setProperty('--shadow-y', `${shadowY}px`);
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start Animation Loop
+        animate();
+
+        function handleMotion(event) {
+            // Capture raw tilt data
+            // Gamma: Left/Right (-90 to 90)
+            // Beta: Front/Back (-180 to 180)
+            let x = event.gamma; 
+            let y = event.beta;
+
+            // Calibration (Holding phone at 45 degrees is "zero")
+            y = y - 45;
+
+            // Clamp values so it doesn't break at extreme angles
+            if (x > 40) x = 40;
+            if (x < -40) x = -40;
+            if (y > 40) y = 40;
+            if (y < -40) y = -40;
+
+            targetX = x;
+            targetY = y;
         }
     </script>
 </body>
