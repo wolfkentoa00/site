@@ -6,17 +6,19 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Thick Glass">
+    <meta name="apple-mobile-web-app-title" content="Liquid OS">
 
-    <title>Thick Glass OS</title>
+    <title>Liquid Motion</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            /* Dynamic variables updated by Gyroscope */
-            --light-x: 50%;
-            --light-y: 50%;
+            /* Variables controlled by JS */
+            --shimmer-x: 50%;
+            --shimmer-y: 50%;
+            --rim-x: 2px;
+            --rim-y: 2px;
             --tilt-x: 0deg;
             --tilt-y: 0deg;
         }
@@ -35,18 +37,17 @@
             justify-content: center;
         }
 
-        /* Abstract Deep Background */
+        /* Dark Fluid Background */
         .ambient-bg {
             position: absolute;
             top: -50%; left: -50%;
             width: 200%; height: 200%;
-            /* Darker gradient to make the thick glass POP */
-            background: radial-gradient(circle at var(--light-x) var(--light-y), 
-                        rgba(60, 60, 255, 0.4), 
-                        rgba(200, 100, 255, 0.2), 
-                        rgba(10, 10, 15, 1) 50%);
+            background: radial-gradient(circle at var(--shimmer-x) var(--shimmer-y), 
+                        rgba(50, 100, 255, 0.3), 
+                        rgba(255, 50, 150, 0.2), 
+                        rgba(0, 0, 0, 1) 60%);
             z-index: 0;
-            transition: background 0.1s ease-out;
+            transition: background 0.1s linear;
         }
 
         .grid {
@@ -55,16 +56,16 @@
             gap: 25px;
             z-index: 2;
             padding: 20px;
-            transform: perspective(800px) rotateX(var(--tilt-y)) rotateY(var(--tilt-x));
-            transition: transform 0.1s ease-out;
+            /* 3D Perspective Tilt */
+            transform: perspective(600px) rotateX(var(--tilt-y)) rotateY(var(--tilt-x));
+            transition: transform 0.1s linear;
         }
 
-        /* THE THICK GLASS STYLE */
-        .glass-card {
-            width: 115px;
-            height: 115px;
-            /* The "Squircle" Shape */
-            border-radius: 38px; 
+        /* --- THE LIQUID BUTTON --- */
+        .liquid-card {
+            width: 120px;
+            height: 120px;
+            border-radius: 38px; /* Squircle */
             
             display: flex;
             flex-direction: column;
@@ -72,79 +73,81 @@
             justify-content: center;
             text-decoration: none;
             position: relative;
-            overflow: hidden; /* Keeps the glare inside */
             
-            /* 1. Base Material */
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(30px); /* Heavier blur = thicker glass */
-            -webkit-backdrop-filter: blur(30px);
+            /* No Static Border - We use box-shadow for edges */
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             
-            /* 2. The Edges (Thickness Simulation) */
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            /* DYNAMIC RIM LIGHTING
+               The values var(--rim-x) change based on tilt.
+               This creates the "Edge Lighting" effect. */
             box-shadow: 
-                /* Inner white rim (Top Left Light) */
-                inset 2px 2px 2px rgba(255, 255, 255, 0.5),
-                /* Inner dark rim (Bottom Right Shadow) */
-                inset -2px -2px 5px rgba(0, 0, 0, 0.2),
-                /* Inner Glow (Volume) */
-                inset 0 0 20px rgba(255, 255, 255, 0.15),
-                /* Outer Drop Shadow (Depth) */
-                0 20px 40px rgba(0,0,0,0.6);
+                inset var(--rim-x) var(--rim-y) 15px rgba(255, 255, 255, 0.6), /* Moving Highlight */
+                inset calc(var(--rim-x) * -1) calc(var(--rim-y) * -1) 20px rgba(0,0,0,0.5), /* Moving Shadow */
+                0 15px 30px rgba(0,0,0,0.5); /* Drop Shadow */
+                
+            overflow: hidden;
+            transition: box-shadow 0.1s linear;
         }
 
-        /* The Moving Glare (Gyro Controlled) */
-        .glass-card::before {
+        /* The "Water" Slosh Effect */
+        .liquid-card::before {
             content: '';
             position: absolute;
             top: -50%; left: -50%; right: -50%; bottom: -50%;
             
-            /* Sharp reflection */
+            /* This gradient moves wildly to simulate water sloshing */
             background: radial-gradient(
-                circle at var(--light-x) var(--light-y), 
-                rgba(255, 255, 255, 0.8) 0%, 
-                rgba(255, 255, 255, 0.0) 30%
+                70% 70% at var(--shimmer-x) var(--shimmer-y), 
+                rgba(255, 255, 255, 0.5) 0%,   /* Bright center */
+                rgba(255, 255, 255, 0.1) 30%,  /* Fade */
+                transparent 70%
             );
-            opacity: 0.7;
+            
+            opacity: 0.8;
             pointer-events: none;
             mix-blend-mode: overlay;
+            filter: blur(8px); /* Softens the light to look like liquid */
         }
 
         .icon { 
-            font-size: 42px; 
+            font-size: 45px; 
             margin-bottom: 5px; 
             z-index: 2;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); /* Icon floats inside */
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));
+            transform: translateZ(20px); /* Lifts icon off glass */
         }
         
         .label { 
             font-size: 12px; 
-            color: rgba(255,255,255,0.9); 
+            color: rgba(255,255,255,0.8); 
             font-weight: 600; 
             z-index: 2;
-            letter-spacing: 0.5px;
         }
 
-        /* Brand Colors */
+        /* Brand Styles */
         .snap { color: #FFFC00; }
-        .tiktok { color: #00f2ea; text-shadow: 2px 2px 0px #ff0050; }
+        .tiktok { color: #00f2ea; text-shadow: 2px 2px #ff0050; }
         .yt { color: #ff0000; }
-        .camera { color: #ffffff; }
+        .camera { color: #eeeeee; }
 
-        /* Button to start Gyro */
+        /* Start Button */
         #perm-btn {
             position: absolute;
             bottom: 60px;
             z-index: 10;
-            padding: 14px 28px;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.4);
+            padding: 15px 30px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            border-radius: 40px;
-            backdrop-filter: blur(15px);
-            font-weight: 600;
-            font-size: 14px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
     </style>
 </head>
@@ -153,25 +156,25 @@
     <div class="ambient-bg"></div>
 
     <div class="grid">
-        <a href="snapchat://" class="glass-card">
+        <a href="snapchat://" class="liquid-card">
             <i class="fab fa-snapchat-ghost icon snap"></i>
             <span class="label">Snap</span>
         </a>
-        <a href="tiktok://" class="glass-card">
+        <a href="tiktok://" class="liquid-card">
             <i class="fab fa-tiktok icon tiktok"></i>
             <span class="label">TikTok</span>
         </a>
-        <a href="youtube://" class="glass-card">
+        <a href="youtube://" class="liquid-card">
             <i class="fab fa-youtube icon yt"></i>
             <span class="label">YouTube</span>
         </a>
-        <a href="instagram://story-camera" class="glass-card">
+        <a href="instagram://story-camera" class="liquid-card">
             <i class="fas fa-camera icon camera"></i>
             <span class="label">Camera</span>
         </a>
     </div>
 
-    <button id="perm-btn" onclick="requestMotion()">Initialize Glass</button>
+    <button id="perm-btn" onclick="requestMotion()">ACTIVATE LIQUID</button>
 
     <script>
         function requestMotion() {
@@ -191,20 +194,34 @@
         }
 
         function handleOrientation(event) {
-            const x = event.gamma; 
-            const y = event.beta;  
+            const x = event.gamma; // Tilt Left/Right
+            const y = event.beta;  // Tilt Front/Back
 
-            // Smoother light movement
-            const lightX = 50 + (x * 1.2); 
-            const lightY = 50 + ((y - 45) * 1.8); 
+            // 1. Calculate Rim Light (The Edge Effect)
+            // If you tilt Left (negative x), Rim light appears on Right edge.
+            const rimX = (x / 3) * -1; 
+            const rimY = ((y - 45) / 3) * -1;
 
-            // Update Variables
-            document.documentElement.style.setProperty('--light-x', `${lightX}%`);
-            document.documentElement.style.setProperty('--light-y', `${lightY}%`);
+            // 2. Calculate Liquid Center (Sloshing)
+            // Multiplied by 2.0 to make the water move FAST inside the glass
+            const shimmerX = 50 + (x * 2.0); 
+            const shimmerY = 50 + ((y - 45) * 2.5);
+
+            // 3. Grid Tilt
+            const tiltX = (x / 10).toFixed(2);
+            const tiltY = ((y - 45) / 10).toFixed(2);
+
+            const root = document.documentElement;
+
+            // Update CSS
+            root.style.setProperty('--rim-x', `${rimX}px`);
+            root.style.setProperty('--rim-y', `${rimY}px`);
             
-            // Subtle 3D tilt
-            document.documentElement.style.setProperty('--tilt-x', `${(x / 8).toFixed(2)}deg`);
-            document.documentElement.style.setProperty('--tilt-y', `${-((y - 45) / 8).toFixed(2)}deg`);
+            root.style.setProperty('--shimmer-x', `${shimmerX}%`);
+            root.style.setProperty('--shimmer-y', `${shimmerY}%`);
+            
+            root.style.setProperty('--tilt-x', `${tiltX}deg`);
+            root.style.setProperty('--tilt-y', `${-tiltY}deg`);
         }
     </script>
 </body>
