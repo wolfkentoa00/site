@@ -2,933 +2,194 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HYPER-TUNER | Ultimate Engine Sim</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Liquid Gyro">
+    <title>Liquid Gyro Launcher</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Babel for JSX compilation -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;900&display=swap');
-        
-        body { margin: 0; background: #050505; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #ef4444; }
-        
-        /* Loading Animation */
-        .loader {
-            border: 4px solid #333;
-            border-top: 4px solid #ef4444;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Carbon Fiber Pattern */
-        .carbon-bg {
-            background-color: #0a0a0a;
-            background-image: 
-                linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), 
-                linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000);
-            background-size: 8px 8px;
-            background-position: 0 0, 4px 4px;
-        }
-        
-        .glass-panel {
-            background: rgba(10, 10, 10, 0.8);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        :root {
+            --light-x: 50%;
+            --light-y: 50%;
+            --tilt-x: 0deg;
+            --tilt-y: 0deg;
         }
 
-        .neon-text { text-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
-        .flame-glow { box-shadow: 0 0 20px #ff5500; }
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: -apple-system, sans-serif;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The Deep Ambient Background */
+        .ambient-bg {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at var(--light-x) var(--light-y), 
+                        rgba(56, 189, 248, 0.4), 
+                        rgba(192, 132, 252, 0.3), 
+                        rgba(0,0,0,1) 60%);
+            z-index: 0;
+            transition: background 0.1s ease-out;
+        }
+
+        /* The Glass Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            z-index: 2;
+            padding: 20px;
+            /* Subtle 3D tilt of the whole container */
+            transform: perspective(1000px) rotateX(var(--tilt-y)) rotateY(var(--tilt-x));
+            transition: transform 0.1s ease-out;
+        }
+
+        /* The Liquid Glass Cards */
+        .glass-card {
+            width: 110px;
+            height: 110px;
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            
+            /* Base Glass Style */
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        /* The "Moving Light" Reflection */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 28px;
+            
+            /* This gradient moves based on your phone tilt */
+            background: radial-gradient(
+                circle at var(--light-x) var(--light-y), 
+                rgba(255, 255, 255, 0.5) 0%, 
+                rgba(255, 255, 255, 0.0) 40%
+            );
+            opacity: 0.6;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .icon { font-size: 38px; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .label { font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 500; }
+
+        /* Specific Brand Colors (Glows only) */
+        .snap { color: #FFFC00; text-shadow: 0 0 15px rgba(255, 252, 0, 0.3); }
+        .tiktok { color: #00f2ea; text-shadow: 2px 2px 0px #ff0050; }
+        .yt { color: #ff0000; text-shadow: 0 0 15px rgba(255, 0, 0, 0.4); }
+        .camera { color: #e0e0e0; }
+
+        /* Permission Button (Hidden after activation) */
+        #perm-btn {
+            position: absolute;
+            bottom: 50px;
+            z-index: 10;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
     </style>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "react": "https://esm.sh/react@18.2.0",
-                "react-dom": "https://esm.sh/react-dom@18.2.0",
-                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-                "three": "https://esm.sh/three@0.161.0",
-                "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.16?external=react,react-dom,three",
-                "@react-three/drei": "https://esm.sh/@react-three/drei@9.102.0?external=react,react-dom,three,@react-three/fiber",
-                "recharts": "https://esm.sh/recharts@2.12.2?external=react,react-dom",
-                "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react,react-dom"
-            }
-        }
-    </script>
 </head>
 <body>
-    <div id="root" class="h-screen w-screen flex items-center justify-center bg-black">
-        <div class="text-center">
-            <div class="loader mb-4"></div>
-            <div class="text-xs font-mono text-neutral-500 tracking-widest">MACHINING BILLET BLOCK...</div>
-        </div>
+
+    <div class="ambient-bg"></div>
+
+    <div class="grid">
+        <a href="snapchat://" class="glass-card">
+            <i class="fab fa-snapchat-ghost icon snap"></i>
+            <span class="label">Snap</span>
+        </a>
+        <a href="tiktok://" class="glass-card">
+            <i class="fab fa-tiktok icon tiktok"></i>
+            <span class="label">TikTok</span>
+        </a>
+        <a href="youtube://" class="glass-card">
+            <i class="fab fa-youtube icon yt"></i>
+            <span class="label">YouTube</span>
+        </a>
+        <a href="instagram://story-camera" class="glass-card">
+            <i class="fas fa-camera icon camera"></i>
+            <span class="label">Camera</span>
+        </a>
     </div>
 
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import * as THREE from 'three';
-        import { Canvas, useFrame } from '@react-three/fiber';
-        import { OrbitControls, Stage, PerspectiveCamera, Environment, Grid, Stars, RoundedBox, Cylinder, Box, Torus, Tube, Sphere } from '@react-three/drei';
-        import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-        import { Gauge, Zap, Activity, Settings, Play, RotateCcw, Trophy, Wind, CircleDashed, Cpu, Layers, Disc, Flame, Clock } from 'lucide-react';
+    <button id="perm-btn" onclick="requestMotion()">Tap to Enable Liquid Effect</button>
 
-        // --- MASSIVE CAR DATABASE ---
-        const CAR_DB = [
-            // JDM LEGENDS
-            { id: 'j1', name: 'Nissan Skyline GT-R R34', hp: 276, tq: 289, type: 'inline6', desc: 'RB26DETT', redline: 8250 },
-            { id: 'j2', name: 'Toyota Supra MK4', hp: 320, tq: 315, type: 'inline6', desc: '2JZ-GTE', redline: 7200 },
-            { id: 'j3', name: 'Honda S2000', hp: 240, tq: 153, type: 'inline4', desc: 'F20C VTEC', redline: 9000 },
-            { id: 'j4', name: 'Lexus LFA', hp: 552, tq: 354, type: 'v10', desc: '1LR-GUE', redline: 9500 },
-            { id: 'j5', name: 'Nissan GT-R R35', hp: 565, tq: 467, type: 'v6', desc: 'VR38DETT', redline: 7100 },
-            { id: 'j6', name: 'Mitsubishi Evo IX', hp: 286, tq: 289, type: 'inline4', desc: '4G63T', redline: 7600 },
-            
-            // EURO EXOTICS
-            { id: 'e1', name: 'Porsche 911 GT3 RS', hp: 518, tq: 342, type: 'flat6', desc: '4.0L Boxer', redline: 9000 },
-            { id: 'e2', name: 'Ferrari 458 Italia', hp: 562, tq: 398, type: 'v8fp', desc: '4.5L Flat-Plane', redline: 9000 },
-            { id: 'e3', name: 'Audi RS3', hp: 401, tq: 369, type: 'inline5', desc: '2.5L DAZA', redline: 7200 },
-            { id: 'e4', name: 'Lamborghini Huracan', hp: 630, tq: 443, type: 'v10', desc: '5.2L V10', redline: 8500 },
-            { id: 'e5', name: 'Ferrari 812 Superfast', hp: 789, tq: 530, type: 'v12', desc: '6.5L V12', redline: 8900 },
-            { id: 'e6', name: 'BMW M3 E46', hp: 333, tq: 262, type: 'inline6', desc: 'S54', redline: 8000 },
-            { id: 'e7', name: 'Audi RS6 Avant', hp: 591, tq: 590, type: 'v8', desc: '4.0L TT V8', redline: 7000 },
-            { id: 'e8', name: 'Porsche Carrera GT', hp: 603, tq: 435, type: 'v10', desc: '5.7L V10', redline: 8400 },
-
-            // AMERICAN MUSCLE
-            { id: 'a1', name: 'Dodge Viper ACR', hp: 645, tq: 600, type: 'v10', desc: '8.4L V10', redline: 6600 },
-            { id: 'a2', name: 'Corvette C8 Z06', hp: 670, tq: 460, type: 'v8fp', desc: '5.5L LT6', redline: 8600 },
-            { id: 'a3', name: 'Ford Mustang GT350', hp: 526, tq: 429, type: 'v8fp', desc: '5.2L Voodoo', redline: 8250 },
-            { id: 'a4', name: 'Dodge Challenger Hellcat', hp: 717, tq: 656, type: 'v8', desc: '6.2L SC Hemi', redline: 6200 },
-            { id: 'a5', name: 'Corvette C6 Z06', hp: 505, tq: 470, type: 'v8', desc: '7.0L LS7', redline: 7000 },
-        ];
-
-        // --- ADVANCED ENGINE CONFIGS ---
-        const ENGINE_CONFIGS = {
-            inline4: { cylinders: 4, layout: 'inline', angle: 0, offset: 1.0, firingOrder: [0, 3, 1, 2] },
-            inline5: { cylinders: 5, layout: 'inline', angle: 0, offset: 1.0, firingOrder: [0, 1, 3, 4, 2] },
-            inline6: { cylinders: 6, layout: 'inline', angle: 0, offset: 0.95, firingOrder: [0, 4, 2, 5, 1, 3] },
-            v6:      { cylinders: 6, layout: 'v', angle: Math.PI / 3, offset: 0.95, firingOrder: [0, 1, 2, 3, 4, 5] },
-            v8:      { cylinders: 8, layout: 'v', angle: Math.PI / 2, offset: 0.9, firingOrder: [0, 1, 3, 2, 6, 7, 5, 4] },
-            v8fp:    { cylinders: 8, layout: 'v', angle: Math.PI / 2, offset: 0.9, firingOrder: [0, 4, 1, 5, 2, 6, 3, 7] },
-            v10:     { cylinders: 10, layout: 'v', angle: Math.PI / 2, offset: 0.88, firingOrder: [0, 1, 4, 5, 2, 3, 8, 9, 6, 7] },
-            v12:     { cylinders: 12, layout: 'v', angle: Math.PI / 3, offset: 0.85, firingOrder: [0, 6, 4, 10, 2, 8, 5, 11, 1, 7, 3, 9] },
-            flat6:   { cylinders: 6, layout: 'flat', angle: Math.PI, offset: 1.05, firingOrder: [0, 3, 1, 4, 2, 5] },
-        };
-
-        // --- PROCEDURAL COMPONENTS ---
-
-        // High Fidelity Glowing Header
-        const ExhaustHeader = ({ rpm }) => {
-            const meshRef = useRef();
-            const [temp, setTemp] = useState(0);
-
-            useFrame((state, delta) => {
-                const targetTemp = rpm / 11000; 
-                const heatingRate = targetTemp > temp ? 0.2 : 0.05; 
-                const newTemp = temp + (targetTemp - temp) * heatingRate * (delta * 5);
-                setTemp(newTemp);
-
-                if (meshRef.current) {
-                    const r = Math.min(1, newTemp * 2);
-                    const g = Math.max(0, (newTemp - 0.5) * 2);
-                    const b = Math.max(0, (newTemp - 0.8) * 5);
-                    meshRef.current.material.emissive.setRGB(r, g * 0.6, b * 0.5);
-                    meshRef.current.material.emissiveIntensity = newTemp * 3;
-                    meshRef.current.material.color.setRGB(0.3 + r*0.2, 0.3 + g*0.1, 0.3 + b*0.1);
-                }
-            });
-
-            return (
-                <group rotation={[0, 0, -0.5]}>
-                    <Torus args={[0.4, 0.08, 8, 16, Math.PI/2]} position={[0.4, 0, 0]} rotation={[0, 0, Math.PI/2]}>
-                        <meshStandardMaterial ref={meshRef} color="#444" metalness={0.6} roughness={0.7} />
-                    </Torus>
-                    <Cylinder args={[0.12, 0.12, 0.05, 8]} position={[0, 0, 0]} rotation={[0, 0, 1.57]}>
-                        <meshStandardMaterial color="#333" />
-                    </Cylinder>
-                </group>
-            );
-        };
-
-        // Visual Flame Particle with Physics
-        const ExhaustFlame = ({ isActiveRef }) => {
-            const coreRef = useRef();
-            const outerRef = useRef();
-            
-            useFrame((state) => {
-                if (!coreRef.current) return;
-                // Use ref value instead of prop to prevent re-renders
-                const active = isActiveRef.current;
-                
-                if (active) {
-                    const flicker = Math.random() * 0.5 + 0.8;
-                    const stretch = Math.random() * 0.5 + 1.0;
-                    
-                    coreRef.current.scale.set(flicker * 0.6, stretch * 0.8, flicker * 0.6);
-                    coreRef.current.visible = true;
-                    
-                    outerRef.current.scale.set(flicker, stretch * 1.5, flicker);
-                    outerRef.current.visible = true;
-                } else {
-                    coreRef.current.visible = false;
-                    outerRef.current.visible = false;
-                }
-            });
-
-            return (
-                <group position={[0.8, -0.4, 0]} rotation={[0, 0, -1.5]}>
-                    <mesh ref={coreRef} visible={false} position={[0, 0.2, 0]}>
-                        <coneGeometry args={[0.08, 0.6, 8]} />
-                        <meshBasicMaterial color="#4488ff" transparent opacity={0.9} />
-                    </mesh>
-                    <mesh ref={outerRef} visible={false} position={[0, 0.3, 0]}>
-                        <coneGeometry args={[0.15, 0.8, 8]} />
-                        <meshBasicMaterial color="#ff6600" transparent opacity={0.4} />
-                    </mesh>
-                </group>
-            );
-        };
-
-        const Valve = ({ position, rotation, liftRef }) => {
-            const valveRef = useRef();
-            const springRef = useRef();
-            
-            useFrame(() => {
-                if (!valveRef.current || !springRef.current) return;
-                const isOpen = liftRef.current > 0.8;
-                
-                const targetY = isOpen ? -0.15 : 0;
-                valveRef.current.position.y += (targetY - valveRef.current.position.y) * 0.3;
-                
-                springRef.current.scale.y = isOpen ? 0.7 : 1.0;
-            });
-
-            return (
-                <group position={position} rotation={rotation}>
-                    <group ref={valveRef}>
-                        <Cylinder args={[0.03, 0.03, 0.8, 8]} position={[0, 0, 0]}>
-                            <meshStandardMaterial color="#ccc" metalness={0.8} roughness={0.2} />
-                        </Cylinder>
-                        <Cylinder args={[0.12, 0.03, 0.05, 16]} position={[0, -0.4, 0]}>
-                            <meshStandardMaterial color="#bbb" metalness={0.8} />
-                        </Cylinder>
-                        <group position={[0, 0.2, 0]} ref={springRef}>
-                            <Cylinder args={[0.08, 0.08, 0.4, 8]} position={[0, 0.2, 0]}>
-                                <meshStandardMaterial color="#888" wireframe />
-                            </Cylinder>
-                            <Cylinder args={[0.09, 0.09, 0.02, 16]} position={[0, 0.41, 0]}>
-                                <meshStandardMaterial color="#444" />
-                            </Cylinder>
-                        </group>
-                    </group>
-                </group>
-            );
-        };
-
-        const HyperPiston = ({ position, rotation, delayOffset, rpm, offset, index, timeScale }) => {
-            const pistonRef = useRef();
-            const rodRef = useRef();
-            const materialRef = useRef();
-            const crankWeightRef = useRef();
-            
-            // Refs for high-performance updates (avoiding React state)
-            const engineTime = useRef(0);
-            const intakeLiftRef = useRef(0);
-            const exhaustLiftRef = useRef(0);
-            const flameActiveRef = useRef(false);
-
-            useFrame((state, delta) => {
-                if (!pistonRef.current || !rodRef.current) return;
-
-                const step = (rpm / 60) * Math.PI * 2 * delta * timeScale;
-                engineTime.current += step;
-                
-                const rawAngle = engineTime.current + delayOffset;
-                const pistonCycle = Math.sin(rawAngle); 
-                
-                // Physics Animation
-                pistonRef.current.position.y = pistonCycle * 0.35 + 0.2;
-                rodRef.current.rotation.z = Math.cos(rawAngle) * 0.22;
-                rodRef.current.position.y = (pistonCycle * 0.35) - 0.45;
-                if(crankWeightRef.current) crankWeightRef.current.rotation.x = rawAngle;
-
-                // Valve Logic
-                intakeLiftRef.current = Math.sin(rawAngle/2 + Math.PI/2); 
-                exhaustLiftRef.current = Math.sin(rawAngle/2 - Math.PI/2);
-
-                // Combustion Flash
-                const isCombustion = rpm > 100 && pistonCycle > 0.95 && intakeLiftRef.current < 0.8 && exhaustLiftRef.current < 0.8;
-                if (materialRef.current) {
-                    if (isCombustion) {
-                        materialRef.current.color.set('#ff5500');
-                        materialRef.current.emissive.set('#ff2200');
-                        materialRef.current.emissiveIntensity = 4;
-                    } else {
-                        materialRef.current.color.lerp(new THREE.Color('#888'), 0.2);
-                        materialRef.current.emissive.lerp(new THREE.Color('#000'), 0.2);
-                        materialRef.current.emissiveIntensity = 0;
-                    }
-                }
-
-                // Flame Logic
-                if (rpm > 5000 && exhaustLiftRef.current > 0.8) {
-                    const prob = (rpm - 5000) / 5000; 
-                    flameActiveRef.current = Math.random() < prob;
-                } else {
-                    flameActiveRef.current = false;
-                }
-            });
-
-            return (
-                <group position={position} rotation={rotation}>
-                    <group position={[0, 0.8, 0]} rotation={[0,0,0]}>
-                        <Valve position={[-0.12, 0, 0]} rotation={[0,0,-0.2]} liftRef={intakeLiftRef} />
-                        <Valve position={[0.12, 0, 0]} rotation={[0,0,0.2]} liftRef={exhaustLiftRef} />
-                    </group>
-
-                    <group ref={pistonRef}>
-                        <Cylinder args={[0.34, 0.34, 0.05, 32]} position={[0, 0.28, 0]}>
-                            <meshStandardMaterial ref={materialRef} metalness={0.7} roughness={0.3} />
-                        </Cylinder>
-                        <Cylinder args={[0.32, 0.32, 0.02, 32]} position={[0, 0.24, 0]}>
-                             <meshStandardMaterial color="#333" />
-                        </Cylinder>
-                        <Cylinder args={[0.34, 0.34, 0.05, 32]} position={[0, 0.20, 0]}>
-                             <meshStandardMaterial color="#888" metalness={0.7} />
-                        </Cylinder>
-                        <Cylinder args={[0.33, 0.33, 0.25, 32]} position={[0, 0.05, 0]}>
-                             <meshStandardMaterial color="#777" metalness={0.5} roughness={0.5} />
-                        </Cylinder>
-                    </group>
-
-                    <group ref={rodRef}>
-                        <Box args={[0.1, 1.0, 0.08]} position={[0, 0, 0]}>
-                            <meshStandardMaterial color="#444" metalness={0.8} />
-                        </Box>
-                        <Cylinder args={[0.22, 0.22, 0.12, 16]} rotation={[Math.PI/2, 0, 0]} position={[0, -0.5, 0]}>
-                            <meshStandardMaterial color="#333" metalness={0.9} />
-                        </Cylinder>
-                        <Cylinder args={[0.04, 0.04, 0.2, 6]} position={[-0.15, -0.5, 0]}>
-                             <meshStandardMaterial color="#aaa" />
-                        </Cylinder>
-                        <Cylinder args={[0.04, 0.04, 0.2, 6]} position={[0.15, -0.5, 0]}>
-                             <meshStandardMaterial color="#aaa" />
-                        </Cylinder>
-                    </group>
-
-                    <Cylinder args={[0.36, 0.36, 1.1, 24, 1, true]} position={[0, 0.2, 0]}>
-                         <meshStandardMaterial color="#fff" metalness={0.5} roughness={0.1} transparent opacity={0.05} side={THREE.DoubleSide} />
-                    </Cylinder>
-
-                    <group position={[0.5, 0.6, 0]} rotation={[0, 0, -0.2]}>
-                        <ExhaustHeader rpm={rpm} />
-                        <ExhaustFlame isActiveRef={flameActiveRef} />
-                    </group>
-
-                    <group position={[0, -1, 0]} rotation={[-rotation[0], -rotation[1], -rotation[2]]}> 
-                        <group ref={crankWeightRef}>
-                            <group position={[0, 0.3, 0]}>
-                                <Box args={[0.15, 0.4, 0.05]} position={[0, -0.5, 0]}>
-                                    <meshStandardMaterial color="#222" metalness={0.9} />
-                                </Box>
-                                <Cylinder args={[0.35, 0.35, 0.05, 16, 1, false, 0, Math.PI]} rotation={[Math.PI/2, 0, Math.PI]} position={[0, -0.7, 0]}>
-                                     <meshStandardMaterial color="#222" metalness={0.9} />
-                                </Cylinder>
-                            </group>
-                        </group>
-                    </group>
-                </group>
-            );
-        };
-
-        const AccurateBlock = ({ config, length }) => {
-            const blocks = [];
-            const ribCount = Math.floor(length * 2);
-
-            blocks.push(
-                <Box key="deck" args={[config.layout === 'inline' ? 1.4 : 2.4, 0.2, length]} position={[0, 0.8, 0]}>
-                    <meshStandardMaterial color="#a0a0a0" metalness={0.6} roughness={0.4} />
-                </Box>
-            );
-
-            for (let i = 0; i < ribCount; i++) {
-                const z = (i / ribCount) * length - (length / 2) + 0.2;
-                blocks.push(
-                    <Box key={`rib-${i}`} args={[config.layout === 'inline' ? 1.6 : 2.6, 1.5, 0.1]} position={[0, 0, z]}>
-                        <meshStandardMaterial color="#909090" metalness={0.5} roughness={0.5} transparent opacity={0.3} />
-                    </Box>
-                );
+    <script>
+        function requestMotion() {
+            // iOS 13+ requires permission for Gyroscope
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            document.getElementById('perm-btn').style.display = 'none';
+                            window.addEventListener('deviceorientation', handleOrientation);
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Non-iOS devices usually just work
+                document.getElementById('perm-btn').style.display = 'none';
+                window.addEventListener('deviceorientation', handleOrientation);
             }
+        }
 
-            return <group>{blocks}</group>;
-        };
+        function handleOrientation(event) {
+            const x = event.gamma; // In degree in the range [-90,90] (Left/Right)
+            const y = event.beta;  // In degree in the range [-180,180] (Front/Back)
 
-        const EngineScene = ({ configName, rpm, isRunning, timeScale }) => {
-            const config = ENGINE_CONFIGS[configName];
-            const groupRef = useRef();
+            // 1. Move the Glare (Light Source)
+            // We map the tilt to percentage (0% to 100%)
+            // If you tilt left (negative gamma), light moves right (looks like reflection)
+            const lightX = 50 + (x * 0.8); 
+            const lightY = 50 + ((y - 45) * 1.5); // Subtract 45 to account for holding phone at angle
 
-            useFrame((state) => {
-                if (isRunning && groupRef.current) {
-                    const shake = (rpm / 8000) * 0.002;
-                    groupRef.current.position.x = (Math.random() - 0.5) * shake;
-                    groupRef.current.position.y = (Math.random() - 0.5) * shake;
-                }
-            });
+            // 2. Subtle 3D Tilt of the Grid
+            const tiltX = (x / 5).toFixed(2); // Small rotation
+            const tiltY = ((y - 45) / 5).toFixed(2);
 
-            const parts = useMemo(() => {
-                const p = [];
-                const count = config.cylinders;
-                const offset = config.offset;
-                for (let i = 0; i < count; i++) {
-                    const firingIndex = config.firingOrder.indexOf(i);
-                    const phase = (firingIndex / count) * Math.PI * 4; 
-                    let pos = [0, 0, 0];
-                    let rot = [0, 0, 0];
-                    if (config.layout === 'inline') {
-                        pos = [0, 0, (i - count/2) * offset];
-                    } else {
-                        const isLeft = i % 2 === 0;
-                        const zPos = (Math.floor(i / 2) - count / 4) * offset;
-                        const bankAngle = config.layout === 'flat' ? Math.PI / 2 : config.angle / 2;
-                        pos = [
-                            isLeft ? Math.sin(bankAngle) * 0.5 : -Math.sin(bankAngle) * 0.5,
-                            isLeft ? Math.cos(bankAngle) * 0.5 : Math.cos(bankAngle) * 0.5,
-                            zPos
-                        ];
-                        rot = [0, 0, isLeft ? -bankAngle : bankAngle];
-                    }
-                    p.push({ id: i, pos, rot, phase });
-                }
-                return p;
-            }, [configName]);
-
-            const blockLength = parts.length * 0.5 + 1;
-
-            return (
-                <group ref={groupRef}>
-                    <AccurateBlock config={config} length={blockLength} />
-
-                    {parts.map(part => (
-                        <HyperPiston 
-                            key={part.id}
-                            position={part.pos}
-                            rotation={part.rot}
-                            delayOffset={part.phase}
-                            rpm={rpm}
-                            offset={config.offset}
-                            index={part.id}
-                            timeScale={timeScale}
-                        />
-                    ))}
-
-                    <Cylinder args={[0.05, 0.05, config.cylinders * 0.6, 16]} rotation={[Math.PI/2, 0, 0]} position={[0, -1, 0]}>
-                        <meshStandardMaterial color="#111" metalness={1} roughness={0.2} />
-                    </Cylinder>
-                    
-                    <group position={[0, -3.5, 0]}>
-                        <Box args={[3, 0.2, 4]}><meshStandardMaterial color="#111" /></Box>
-                        <Cylinder args={[0.1, 0.1, 2.5, 8]} position={[0, 1.25, -1.5]}><meshStandardMaterial color="#d00" /></Cylinder>
-                        <Cylinder args={[0.1, 0.1, 2.5, 8]} position={[0, 1.25, 1.5]}><meshStandardMaterial color="#d00" /></Cylinder>
-                    </group>
-                </group>
-            );
-        };
-
-        // --- GAUGE CLUSTER COMPONENT ---
-        const GaugeCluster = ({ rpm, speed, gear, maxRpm, currentRedline }) => {
-            return (
-                <div className="absolute top-8 right-8 flex gap-6 pointer-events-none select-none">
-                     {/* Tach */}
-                     <div className="relative w-64 h-64">
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
-                            <circle cx="50" cy="50" r="45" fill="rgba(0,0,0,0.8)" stroke="#333" strokeWidth="2" />
-                            {/* Dynamic Redline Zone */}
-                            <path 
-                                d={`M 50,50 L ${50 + 35 * Math.cos((currentRedline/10000 * 270 - 135 - 90) * Math.PI/180)},${50 + 35 * Math.sin((currentRedline/10000 * 270 - 135 - 90) * Math.PI/180)} A 35,35 0 0,1 ${50 + 35 * Math.cos((10000/10000 * 270 - 135 - 90) * Math.PI/180)},${50 + 35 * Math.sin((10000/10000 * 270 - 135 - 90) * Math.PI/180)}`} 
-                                fill="none" stroke="red" strokeWidth="8" strokeDasharray="5,2" opacity="0.6" 
-                            />
-                            {/* Ticks */}
-                            {[...Array(11)].map((_, i) => (
-                                <line 
-                                    key={i}
-                                    x1="50" y1="10" x2="50" y2="15" 
-                                    transform={`rotate(${i * 27 - 135} 50 50)`} 
-                                    stroke={i * 1000 >= currentRedline ? "red" : "white"} 
-                                    strokeWidth="2"
-                                />
-                            ))}
-                            <text x="50" y="70" textAnchor="middle" fill="#666" fontSize="6" fontFamily="monospace">x1000 RPM</text>
-                            {/* Needle */}
-                            <line 
-                                x1="50" y1="50" x2="50" y2="10" 
-                                stroke="red" strokeWidth="2" strokeLinecap="round"
-                                transform={`rotate(${(rpm / 10000) * 270 - 135} 50 50)`}
-                                className="transition-transform duration-75 ease-linear"
-                            />
-                            <circle cx="50" cy="50" r="3" fill="#fff" />
-                        </svg>
-                     </div>
-                </div>
-            );
-        };
-
-        // --- MAIN APP ---
-
-        const App = () => {
-            const [selectedCar, setSelectedCar] = useState(CAR_DB[0]);
-            const [mods, setMods] = useState({ tune: false, turbo: false, exhaust: false, cams: false });
-            const [timeScale, setTimeScale] = useState(1.0); // 1.0 = normal, 0.1 = slo-mo
+            // Update CSS Variables
+            document.documentElement.style.setProperty('--light-x', `${lightX}%`);
+            document.documentElement.style.setProperty('--light-y', `${lightY}%`);
             
-            const [dynoRunning, setDynoRunning] = useState(false);
-            const [rpm, setRpm] = useState(0);
-            const [speed, setSpeed] = useState(0);
-            const [data, setData] = useState([]);
-            const [ignition, setIgnition] = useState(false);
-            
-            const audioCtx = useRef(null);
-            const soundNodes = useRef(null);
-            const dynoInterval = useRef(null);
-            
-            // Boost State for Turbo Sounds
-            const boostState = useRef({ pressure: 0, wasUnderLoad: false });
-
-            // Calculates the REAL redline based on car + mods
-            const currentRedline = useMemo(() => {
-                let limit = selectedCar.redline;
-                if (mods.tune) limit += 600;
-                if (mods.cams) limit += 1000;
-                return limit;
-            }, [selectedCar, mods]);
-
-            // REALISTIC AUDIO ENGINE V3 (Harmonic Synthesis + Distortion + Turbo)
-            useEffect(() => {
-                const shouldPlay = ignition || rpm > 50;
-
-                if (shouldPlay && !audioCtx.current) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    const ctx = new AudioContext();
-                    
-                    // Master
-                    const masterGain = ctx.createGain();
-                    masterGain.connect(ctx.destination);
-
-                    // Distortion (Grit)
-                    const distortion = ctx.createWaveShaper();
-                    function makeDistortionCurve(amount) {
-                        const k = typeof amount === 'number' ? amount : 50;
-                        const n_samples = 44100;
-                        const curve = new Float32Array(n_samples);
-                        const deg = Math.PI / 180;
-                        for (let i = 0; i < n_samples; ++i) {
-                            const x = i * 2 / n_samples - 1;
-                            curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
-                        }
-                        return curve;
-                    }
-                    distortion.curve = makeDistortionCurve(400);
-                    distortion.oversample = '4x';
-                    distortion.connect(masterGain);
-
-                    // Oscillators
-                    const osc1 = ctx.createOscillator();
-                    const osc1Gain = ctx.createGain();
-                    osc1.connect(osc1Gain);
-                    osc1Gain.connect(distortion); 
-
-                    const osc2 = ctx.createOscillator();
-                    const osc2Gain = ctx.createGain();
-                    osc2.connect(osc2Gain);
-                    osc2Gain.connect(masterGain); 
-
-                    const osc3 = ctx.createOscillator();
-                    const osc3Gain = ctx.createGain();
-                    osc3.connect(osc3Gain);
-                    osc3Gain.connect(distortion);
-
-                    // Turbo Whistle (Sine)
-                    const turboOsc = ctx.createOscillator();
-                    turboOsc.type = 'sine';
-                    const turboGain = ctx.createGain();
-                    turboGain.gain.value = 0;
-                    turboOsc.connect(turboGain);
-                    turboGain.connect(masterGain);
-
-                    // Noise (Air/Flutter)
-                    const bufferSize = ctx.sampleRate * 2;
-                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        data[i] = Math.random() * 2 - 1;
-                    }
-                    const noise = ctx.createBufferSource();
-                    noise.buffer = buffer;
-                    noise.loop = true;
-                    const noiseFilter = ctx.createBiquadFilter();
-                    noiseFilter.type = 'lowpass';
-                    const noiseGain = ctx.createGain();
-                    noise.connect(noiseFilter);
-                    noiseFilter.connect(noiseGain);
-                    noiseGain.connect(masterGain);
-
-                    osc1.start();
-                    osc2.start();
-                    osc3.start();
-                    turboOsc.start();
-                    noise.start();
-
-                    soundNodes.current = { ctx, masterGain, osc1, osc2, osc3, turboOsc, turboGain, noise, noiseFilter, noiseGain, osc1Gain, osc2Gain, osc3Gain };
-                    audioCtx.current = ctx;
-
-                } else if (!shouldPlay && audioCtx.current) {
-                    try {
-                        soundNodes.current.osc1.stop();
-                        soundNodes.current.osc2.stop();
-                        soundNodes.current.osc3.stop();
-                        soundNodes.current.turboOsc.stop();
-                        soundNodes.current.noise.stop();
-                        audioCtx.current.close();
-                    } catch(e) {}
-                    audioCtx.current = null;
-                    soundNodes.current = null;
-                }
-
-                if (soundNodes.current && audioCtx.current) {
-                    const ctx = audioCtx.current;
-                    const nodes = soundNodes.current;
-                    const now = ctx.currentTime;
-
-                    // ENGINE PROFILES
-                    let cylinders = 4;
-                    if (selectedCar.type.includes('6')) cylinders = 6;
-                    if (selectedCar.type.includes('8')) cylinders = 8;
-                    if (selectedCar.type.includes('10')) cylinders = 10;
-                    if (selectedCar.type.includes('12')) cylinders = 12;
-
-                    // Base Firing Frequency
-                    const baseFreq = (rpm / 60) * (cylinders / 2);
-
-                    // Tone shaping
-                    if (selectedCar.type === 'v8') {
-                        nodes.osc1.type = 'sawtooth';
-                        nodes.osc2.type = 'square';
-                        nodes.osc3.type = 'sawtooth';
-                        nodes.osc1.frequency.setTargetAtTime(baseFreq, now, 0.05);
-                        nodes.osc2.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.05);
-                        nodes.osc3.frequency.setTargetAtTime(baseFreq * 1.01, now, 0.05);
-                    } else if (selectedCar.type === 'v10' || selectedCar.type === 'v12') {
-                        nodes.osc1.type = 'sawtooth';
-                        nodes.osc2.type = 'triangle'; 
-                        nodes.osc3.type = 'sawtooth';
-                        nodes.osc1.frequency.setTargetAtTime(baseFreq, now, 0.05);
-                        nodes.osc2.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.05);
-                        nodes.osc3.frequency.setTargetAtTime(baseFreq * 1.5, now, 0.05);
-                    } else {
-                        nodes.osc1.type = 'sawtooth';
-                        nodes.osc2.type = 'square';
-                        nodes.osc3.type = 'sine';
-                        nodes.osc1.frequency.setTargetAtTime(baseFreq, now, 0.05);
-                        nodes.osc2.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.05);
-                        nodes.osc3.frequency.setTargetAtTime(baseFreq * 2, now, 0.05);
-                    }
-
-                    // Gains
-                    nodes.osc1Gain.gain.setTargetAtTime(0.4, now, 0.1);
-                    nodes.osc2Gain.gain.setTargetAtTime(0.2, now, 0.1);
-                    nodes.osc3Gain.gain.setTargetAtTime(0.2, now, 0.1);
-
-                    // --- TURBO LOGIC ---
-                    // Simulate boost building
-                    const isAccelerating = dynoRunning || (ignition && rpm > 1500); // Simple heuristic
-                    const targetBoost = (isAccelerating && mods.turbo) ? Math.min(1, rpm / 6000) : 0;
-                    
-                    // Lerp boost pressure
-                    const currentPressure = boostState.current.pressure;
-                    const newPressure = currentPressure + (targetBoost - currentPressure) * 0.05;
-                    boostState.current.pressure = newPressure;
-
-                    // Turbo Whistle
-                    if (mods.turbo) {
-                        nodes.turboOsc.frequency.setTargetAtTime(2000 + (newPressure * 15000), now, 0.1);
-                        nodes.turboGain.gain.setTargetAtTime(newPressure * 0.15, now, 0.1);
-                    } else {
-                        nodes.turboGain.gain.setTargetAtTime(0, now, 0.1);
-                    }
-
-                    // Stututu / BOV Trigger
-                    // If we were under load (high pressure) and suddenly dropped load
-                    if (boostState.current.wasUnderLoad && !isAccelerating && currentPressure > 0.4) {
-                        // Trigger Stututu
-                        const now = ctx.currentTime;
-                        nodes.noiseFilter.type = 'highpass';
-                        nodes.noiseFilter.frequency.setValueAtTime(800, now);
-                        
-                        // Flutter envelope
-                        for(let i=0; i<6; i++) {
-                            nodes.noiseGain.gain.linearRampToValueAtTime(0.4 * (1 - i/6), now + i*0.08);
-                            nodes.noiseGain.gain.linearRampToValueAtTime(0, now + i*0.08 + 0.04);
-                        }
-                        boostState.current.wasUnderLoad = false; // Reset
-                    } else if (isAccelerating) {
-                        boostState.current.wasUnderLoad = true;
-                        // Regular Intake Noise
-                        nodes.noiseFilter.type = 'lowpass';
-                        nodes.noiseFilter.frequency.setTargetAtTime(rpm * 1.5, now, 0.1);
-                        nodes.noiseGain.gain.setTargetAtTime(rpm / 50000, now, 0.1);
-                    } else {
-                        // Idle air
-                        nodes.noiseGain.gain.setTargetAtTime(0, now, 0.1);
-                    }
-
-                    // Master Volume
-                    let vol = (0.1 + (rpm/15000));
-                    if (ignition) {
-                        if (rpm < 1200 && mods.cams) {
-                            const chop = (Math.sin(now * 18) > -0.2) ? 1.0 : 0.2; 
-                            vol *= chop;
-                        }
-                    } else {
-                         vol = 0.5 * (rpm/8000);
-                    }
-                    nodes.masterGain.gain.setTargetAtTime(vol, now, 0.05);
-                }
-
-            }, [rpm, ignition, selectedCar, mods, dynoRunning]);
-
-            // PHYSICS LOOP
-            useEffect(() => {
-                const loop = setInterval(() => {
-                    if (dynoRunning) return; 
-                    if (ignition) {
-                        setRpm(prev => {
-                            if (prev > 1200) return prev * 0.92;
-                            const target = mods.cams ? 1100 : 850;
-                            const noise = mods.cams ? (Math.random() - 0.5) * 150 : (Math.random() - 0.5) * 30;
-                            return target + noise;
-                        });
-                        setSpeed(0);
-                    } else {
-                        setRpm(prev => prev > 10 ? prev * 0.92 : 0);
-                        setSpeed(prev => prev * 0.95);
-                    }
-                }, 33);
-                return () => clearInterval(loop);
-            }, [ignition, dynoRunning, mods.cams]);
-
-            const runDyno = () => {
-                if (!ignition) return alert("Engine is off!");
-                setDynoRunning(true);
-                setData([]);
-                
-                let currentRpm = 2500;
-                
-                if (dynoInterval.current) clearInterval(dynoInterval.current);
-                
-                dynoInterval.current = setInterval(() => {
-                    currentRpm += 120;
-                    
-                    let peakTq = selectedCar.tq * (mods.turbo ? 1.4 : 1) * (mods.tune ? 1.15 : 1) * (mods.exhaust ? 1.05 : 1);
-                    let peakRpm = mods.cams ? 7500 : 5500;
-                    
-                    let tqCurve = peakTq * (1 - Math.pow((currentRpm - peakRpm) / 9000, 2));
-                    if (tqCurve < 0) tqCurve = 0;
-                    let hp = (tqCurve * currentRpm) / 5252;
-                    
-                    setSpeed(currentRpm * 0.025);
-                    setData(prev => [...prev, { rpm: currentRpm, hp: Math.floor(hp), tq: Math.floor(tqCurve) }]);
-                    setRpm(currentRpm);
-
-                    if (currentRpm >= currentRedline) {
-                        clearInterval(dynoInterval.current);
-                        setDynoRunning(false);
-                    }
-                }, 30);
-            };
-
-            const toggleIgnition = () => {
-                if (ignition) {
-                    setIgnition(false);
-                    setDynoRunning(false);
-                    if (dynoInterval.current) clearInterval(dynoInterval.current);
-                } else {
-                    setIgnition(true);
-                }
-            };
-
-            const toggleMod = (m) => setMods({...mods, [m]: !mods[m]});
-
-            return (
-                <div className="flex h-screen w-full carbon-bg text-white overflow-hidden font-sans">
-                    
-                    {/* LEFT PANEL */}
-                    <div className="w-96 glass-panel flex flex-col z-20 h-full border-r-0 backdrop-blur-xl">
-                        <div className="p-8 border-b border-white/10">
-                            <h1 className="text-3xl font-black italic tracking-tighter text-red-600 flex items-center gap-3 neon-text">
-                                <Zap className="fill-red-600" size={28} /> HYPER<span className="text-white">TUNER</span>
-                            </h1>
-                            <div className="text-[10px] text-neutral-400 font-mono mt-2 tracking-[0.3em] uppercase">Simulating: {selectedCar.type} Block</div>
-                        </div>
-                        
-                        <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                             <div className="text-xs font-bold text-neutral-500 mb-2 uppercase tracking-wider pl-2">Select Chassis</div>
-                             {CAR_DB.map(car => (
-                                 <button 
-                                    key={car.id}
-                                    onClick={() => { setSelectedCar(car); setData([]); }}
-                                    className={`w-full text-left p-4 rounded-lg border transition-all group relative overflow-hidden ${
-                                        selectedCar.id === car.id 
-                                        ? 'border-red-600 bg-red-600/10 text-white' 
-                                        : 'border-white/5 bg-white/5 text-neutral-400 hover:border-white/20 hover:text-white'
-                                    }`}
-                                 >
-                                    <div className="relative z-10 flex justify-between items-center">
-                                        <div>
-                                            <div className="font-bold text-sm tracking-tight">{car.name}</div>
-                                            <div className="text-[10px] font-mono opacity-50 mt-1">{car.desc} | {car.hp} HP | <span className="text-red-400">Redline: {car.redline}</span></div>
-                                        </div>
-                                        {selectedCar.id === car.id && <Disc className="animate-spin" size={16} />}
-                                    </div>
-                                    <div className="absolute inset-0 bg-gradient-to-r from-red-600/0 via-red-600/10 to-red-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                                 </button>
-                             ))}
-                        </div>
-
-                        <div className="p-6 border-t border-white/10 bg-black/40">
-                             <div className="text-xs font-bold text-neutral-500 mb-3 uppercase tracking-wider">Bolt-Ons</div>
-                             <div className="grid grid-cols-2 gap-2">
-                                {[
-                                    { id: 'tune', label: 'Stage 2 ECU', icon: <Cpu size={14}/> },
-                                    { id: 'turbo', label: 'Big Turbo', icon: <Wind size={14}/> },
-                                    { id: 'exhaust', label: 'Catless Pipes', icon: <CircleDashed size={14}/> },
-                                    { id: 'cams', label: 'Race Cams', icon: <Settings size={14}/> },
-                                ].map(m => (
-                                    <button 
-                                        key={m.id} 
-                                        onClick={() => toggleMod(m.id)}
-                                        className={`flex items-center gap-2 px-3 py-3 text-[10px] uppercase font-bold rounded border transition-all ${
-                                            mods[m.id] 
-                                            ? 'bg-red-500/20 border-red-500 text-red-400' 
-                                            : 'bg-black/50 border-white/10 text-neutral-500 hover:bg-white/10'
-                                        }`}
-                                    >
-                                        {m.icon} {m.label}
-                                    </button>
-                                ))}
-                             </div>
-                        </div>
-                    </div>
-
-                    {/* CENTER STAGE */}
-                    <div className="flex-1 relative flex flex-col bg-gradient-to-b from-neutral-900 to-black">
-                        {/* Header Stats */}
-                        <div className="absolute top-8 left-8 z-10 pointer-events-none">
-                            <h2 className="text-7xl font-black text-white/5 uppercase tracking-tighter select-none">{selectedCar.type}</h2>
-                            <div className="text-xl font-mono text-red-500 mt-2 flex items-center gap-2">
-                                <Activity size={18} /> {rpm.toFixed(0)} RPM {timeScale < 1 && <span className="text-cyan-400 animate-pulse text-sm">[SLO-MO ACTIVE]</span>}
-                            </div>
-                        </div>
-
-                        {/* Slo-Mo Toggle Overlay */}
-                        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20">
-                            <button 
-                                onClick={() => setTimeScale(timeScale === 1.0 ? 0.1 : 1.0)}
-                                className={`px-6 py-2 rounded-full font-bold border flex items-center gap-2 transition-all ${
-                                    timeScale < 1 
-                                    ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.5)]' 
-                                    : 'bg-black/50 border-white/20 text-neutral-400 hover:text-white'
-                                }`}
-                            >
-                                <Clock size={16} /> {timeScale < 1 ? 'MATRIX MODE ON' : 'SLO-MO OFF'}
-                            </button>
-                        </div>
-
-                        <Canvas shadows dpr={[1, 2]} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}>
-                            <PerspectiveCamera makeDefault position={[5, 4, 6]} fov={35} />
-                            <OrbitControls autoRotate={ignition && !dynoRunning && timeScale === 1.0} autoRotateSpeed={0.5} minPolarAngle={0} maxPolarAngle={Math.PI/1.8} />
-                            
-                            <ambientLight intensity={0.5} />
-                            <pointLight position={[10, 10, 10]} intensity={2} color="#fff" />
-                            <pointLight position={[-10, 5, -5]} intensity={1.5} color="#44f" />
-                            <pointLight position={[0, -5, 5]} intensity={1} color="#f44" />
-                            <spotLight position={[0, 15, 0]} angle={0.3} intensity={3} castShadow penumbra={1} />
-
-                            <Environment preset="city" />
-                            <Stars radius={100} depth={50} count={3000} factor={4} saturation={0} fade speed={0.5} />
-                            
-                            <EngineScene configName={selectedCar.type} rpm={rpm} isRunning={ignition} timeScale={timeScale} />
-                        </Canvas>
-
-                        {/* ANALOG GAUGES */}
-                        <GaugeCluster rpm={rpm} speed={speed} gear={0} maxRpm={10000} currentRedline={currentRedline} />
-
-                        {/* DYNO GRAPH & CONTROLS */}
-                        <div className="absolute bottom-0 left-0 right-0 h-80 glass-panel border-t border-white/10 flex">
-                            
-                            <div className="w-72 p-8 border-r border-white/10 flex flex-col justify-center gap-4">
-                                <button 
-                                    onClick={toggleIgnition}
-                                    className={`w-full py-4 rounded font-black text-xl italic tracking-widest border transition-all flex items-center justify-center gap-3 ${
-                                        ignition 
-                                        ? 'bg-red-600 text-white border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.5)]' 
-                                        : 'bg-transparent text-neutral-500 border-neutral-800 hover:border-white hover:text-white'
-                                    }`}
-                                >
-                                    <Activity size={24} /> {ignition ? 'STOP' : 'START'}
-                                </button>
-
-                                <button 
-                                    onClick={runDyno}
-                                    disabled={!ignition || dynoRunning}
-                                    className={`w-full py-3 rounded text-sm font-mono font-bold border flex items-center justify-center gap-2 transition-all ${
-                                        dynoRunning 
-                                        ? 'bg-neutral-900 text-neutral-600 border-neutral-800' 
-                                        : 'bg-white/5 text-cyan-400 border-cyan-900/50 hover:bg-cyan-500/10 hover:border-cyan-400'
-                                    }`}
-                                >
-                                    {dynoRunning ? <><Flame size={16} className="animate-pulse text-orange-500"/> DYNO ACTIVE</> : 'RUN DYNO PULL'}
-                                </button>
-                            </div>
-
-                            <div className="flex-1 p-6">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={data}>
-                                        <defs>
-                                            <linearGradient id="hpGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
-                                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                                        <XAxis dataKey="rpm" stroke="#444" tick={{fontSize: 10}} tickFormatter={(val) => val/1000 + 'k'} domain={[0, 10000]} />
-                                        <YAxis stroke="#444" tick={{fontSize: 10}} />
-                                        <RechartsTooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333' }} itemStyle={{ fontSize: 12 }} />
-                                        <Area type="monotone" dataKey="hp" stroke="#ef4444" fill="url(#hpGrad)" strokeWidth={3} name="Horsepower" isAnimationActive={false} />
-                                        <Line type="monotone" dataKey="tq" stroke="#3b82f6" strokeWidth={2} dot={false} strokeDasharray="5 5" name="Torque" isAnimationActive={false} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
+            // Limit tilt to avoid flipping
+            document.documentElement.style.setProperty('--tilt-x', `${tiltX}deg`);
+            document.documentElement.style.setProperty('--tilt-y', `${-tiltY}deg`); // Invert Y for natural feel
+        }
     </script>
 </body>
 </html>
