@@ -6,9 +6,9 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Tinted OS">
+    <meta name="apple-mobile-web-app-title" content="Clear Glass">
 
-    <title>Tinted Glass Icons</title>
+    <title>Clear Refractive Glass</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -17,11 +17,11 @@
             /* Physics Variables */
             --light-x: 50%;
             --light-y: 50%;
+            --rim-x: 0px;
+            --rim-y: 0px;
             --shine-angle: 135deg;
             --rot-x: 0deg;
             --rot-y: 0deg;
-            --shadow-x: 0px;
-            --shadow-y: 10px;
         }
 
         body {
@@ -38,13 +38,12 @@
             justify-content: center;
         }
 
-        /* 1. The Wallpaper */
+        /* 1. Vivid Wallpaper (Needs to be bright to show through clear glass) */
         .wallpaper {
             position: absolute;
             width: 150%; height: 150%;
-            /* Darker, moodier background so the colored glass pops */
-            background: radial-gradient(circle at 50% 30%, 
-                #4a00e0, #8e2de2, #000000 70%); 
+            background: radial-gradient(circle at 50% 50%, 
+                #ff6b6b, #5563de, #000000 90%); 
             background-size: 200% 200%;
             z-index: 0;
         }
@@ -52,15 +51,15 @@
         .dock-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 28px;
+            gap: 30px;
             padding: 30px;
             z-index: 10;
             transform-style: preserve-3d;
-            transform: perspective(800px) rotateX(var(--rot-x)) rotateY(var(--rot-y));
+            transform: perspective(1000px) rotateX(var(--rot-x)) rotateY(var(--rot-y));
             transition: transform 0.1s linear;
         }
 
-        /* 2. The Main CLEAR Glass Block */
+        /* --- 2. THE ULTRA-CLEAR GLASS BLOCK --- */
         .glass-block {
             width: 120px;
             height: 120px;
@@ -71,104 +70,87 @@
             justify-content: center;
             text-decoration: none;
             
-            /* Clear Glass Material */
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(35px) saturate(120%);
-            -webkit-backdrop-filter: blur(35px) saturate(120%);
+            /* Ultra Clear Material */
+            background: rgba(255, 255, 255, 0.02); /* Almost invisible */
+            backdrop-filter: blur(15px) saturate(150%); /* Less blur, more color pop */
+            -webkit-backdrop-filter: blur(15px) saturate(150%);
             
-            /* Edges of the clear block */
+            /* Delicate border definition */
             border: 1px solid rgba(255, 255, 255, 0.1);
+            
+            /* INTERNAL REFRACTION LIGHTING (The new magic) 
+               Instead of a drop shadow underneath, we use INSET shadows 
+               that move with tilt to simulate light getting caught inside the edges. */
             box-shadow: 
-                var(--shadow-x) var(--shadow-y) 35px rgba(0,0,0,0.7), /* Deep shadow */
-                inset 0 0 15px rgba(255,255,255,0.05); /* Inner volume */
+                /* 1. Tight inner white definition */
+                inset 0 0 0 1px rgba(255,255,255,0.1),
+                /* 2. Dynamic bright edge (moves with tilt) */
+                inset var(--rim-x) var(--rim-y) 15px rgba(255, 255, 255, 0.7),
+                /* 3. Very subtle, tight external shadow just for grounding */
+                0 4px 10px rgba(0,0,0,0.2);
             
             overflow: hidden;
         }
 
-        /* Glint on the clear block */
+        /* Crisper Glint on the edge */
         .glass-block::after {
             content: '';
             position: absolute;
             inset: 0; border-radius: 38px; padding: 1.5px;
-            background: radial-gradient(circle at var(--light-x) var(--light-y), rgba(255, 255, 255, 1) 0%, transparent 40%);
+            /* Tighter gradient for sharper reflection */
+            background: radial-gradient(circle at var(--light-x) var(--light-y), rgba(255, 255, 255, 1) 0%, transparent 30%);
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor; mask-composite: exclude;
             pointer-events: none;
         }
 
-        /* --- 3. THE TINTED GLASS ICONS --- */
+        /* --- 3. THE TINTED ICONS (Embedded closer) --- */
         .tinted-icon {
             font-size: 52px;
-            margin-bottom: 0px;
             z-index: 5;
-            color: transparent; /* Hide default color */
+            color: transparent;
             
-            /* A. The Colored Liquid Inside */
-            /* We use a gradient from dark to light brand color to simulate depth */
             background: linear-gradient(
                 var(--shine-angle), 
-                var(--brand-dark) 20%, 
+                var(--brand-dark) 10%, 
                 var(--brand-light) 50%,
-                var(--brand-dark) 80%
+                var(--brand-dark) 90%
             );
             background-size: 200% 200%;
             background-position: var(--light-x) var(--light-y);
             -webkit-background-clip: text;
 
-            /* B. The Glass Edges (The magic part) */
+            /* Cleaner filters - closer to the glass surface */
             filter: 
-                /* Layer 1: A tight, bright white rim defining the edge */
-                drop-shadow(0 0 1px rgba(255,255,255,0.7))
-                /* Layer 2: A softer, colored glow showing light passing through */
-                drop-shadow(0 5px 10px var(--brand-glow));
+                drop-shadow(0 0 1px rgba(255,255,255,0.5)) /* Sharp rim */
+                drop-shadow(0 2px 5px var(--brand-glow)); /* Subtle glow */
             
-            transform: translateZ(30px); /* Lift it up in 3D space */
-            transition: background-position 0.1s ease-out;
+            /* Reduced Z-depth so they feel embedded, not floating above */
+            transform: translateZ(5px); 
         }
 
-        /* 4. Brand Color Definitions (Dark, Light, Glow) */
-        .snap { 
-            --brand-dark: #b3b000; 
-            --brand-light: #FFFC00; 
-            --brand-glow: rgba(255, 252, 0, 0.5); 
-        }
+        /* Brand Color Definitions */
+        .snap { --brand-dark: #b3b000; --brand-light: #FFFC00; --brand-glow: rgba(255, 252, 0, 0.3); }
         .tiktok { 
-            /* TikTok is tricky, using a cyan/magenta mix for tint */
-            --brand-dark: #00b0a8; 
-            --brand-light: #ff0050; 
-            --brand-glow: rgba(0, 242, 234, 0.5);
+            --brand-dark: #00b0a8; --brand-light: #ff0050; --brand-glow: rgba(0, 242, 234, 0.3);
             background: linear-gradient(var(--shine-angle), #00f2ea, #ff0050, #00f2ea);
-            background-size: 200% 200%;
-            background-position: var(--light-x) var(--light-y);
+            background-size: 200% 200%; background-position: var(--light-x) var(--light-y);
             -webkit-background-clip: text;
         }
-        .yt { 
-            --brand-dark: #a80000; 
-            --brand-light: #ff4d4d; 
-            --brand-glow: rgba(255, 0, 0, 0.5);
-        }
-        .camera { 
-            --brand-dark: #666666; 
-            --brand-light: #ffffff; 
-            --brand-glow: rgba(255, 255, 255, 0.4);
-        }
+        .yt { --brand-dark: #a80000; --brand-light: #ff4d4d; --brand-glow: rgba(255, 0, 0, 0.3); }
+        .camera { --brand-dark: #666666; --brand-light: #ffffff; --brand-glow: rgba(255, 255, 255, 0.3); }
 
         .label {
-            position: absolute;
-            bottom: 10px;
-            font-size: 12px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.6);
-            pointer-events: none;
+            position: absolute; bottom: 10px; font-size: 12px;
+            font-weight: 600; color: rgba(255, 255, 255, 0.5); pointer-events: none;
         }
 
         #start-btn {
             position: absolute; bottom: 80px; padding: 14px 30px;
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: white; border-radius: 40px; backdrop-filter: blur(15px);
+            color: white; border-radius: 40px; backdrop-filter: blur(10px);
             font-weight: 700; z-index: 100;
         }
-
     </style>
 </head>
 <body>
@@ -176,45 +158,34 @@
     <div class="wallpaper"></div>
 
     <div class="dock-container">
-        
         <a href="snapchat://" class="glass-block snap">
             <i class="fab fa-snapchat-ghost tinted-icon"></i>
             <span class="label">Snap</span>
         </a>
-
         <a href="tiktok://" class="glass-block tiktok">
             <i class="fab fa-tiktok tinted-icon"></i>
             <span class="label">TikTok</span>
         </a>
-
         <a href="youtube://" class="glass-block yt">
             <i class="fab fa-youtube tinted-icon"></i>
             <span class="label">YouTube</span>
         </a>
-
         <a href="instagram://story-camera" class="glass-block camera">
             <i class="fas fa-camera tinted-icon"></i>
             <span class="label">Camera</span>
         </a>
-
     </div>
 
-    <button id="start-btn" onclick="initGyro()">Enable Tinted Glass</button>
+    <button id="start-btn" onclick="initGyro()">Enable Clear Glass</button>
 
     <script>
         function initGyro() {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            document.getElementById('start-btn').style.display = 'none';
-                            window.addEventListener('deviceorientation', handleMotion);
-                        }
-                    })
-                    .catch(console.error);
+                DeviceOrientationEvent.requestPermission().then(p => {
+                    if (p === 'granted') { document.getElementById('start-btn').style.display = 'none'; window.addEventListener('deviceorientation', handleMotion); }
+                });
             } else {
-                document.getElementById('start-btn').style.display = 'none';
-                window.addEventListener('deviceorientation', handleMotion);
+                document.getElementById('start-btn').style.display = 'none'; window.addEventListener('deviceorientation', handleMotion);
             }
         }
 
@@ -222,38 +193,38 @@
         let targetX = 0, targetY = 0;
 
         function animate() {
-            currentX += (targetX - currentX) * 0.08; // Slightly heavier feel
+            currentX += (targetX - currentX) * 0.08;
             currentY += (targetY - currentY) * 0.08;
 
             const root = document.documentElement;
             
-            // Movement variables
             const lightX = 50 + (currentX * 1.5); 
             const lightY = 50 + (currentY * 1.5);
             const angle = 135 + (currentX / 1.5);
-            const rotY = (currentX / 4).toFixed(2);
-            const rotX = (-currentY / 4).toFixed(2);
-            const shadowX = (currentX * -1).toFixed(1);
-            const shadowY = (currentY * -1 + 15).toFixed(1);
+            
+            // Calculate Rim Lighting (Opposite to tilt)
+            const rimX = (currentX / 2.5) * -1;
+            const rimY = ((currentY - 5) / 2.5) * -1;
+
+            const rotY = (currentX / 6).toFixed(2);
+            const rotX = (-currentY / 6).toFixed(2);
 
             root.style.setProperty('--light-x', `${lightX}%`);
             root.style.setProperty('--light-y', `${lightY}%`);
+            root.style.setProperty('--rim-x', `${rimX}px`);
+            root.style.setProperty('--rim-y', `${rimY}px`);
             root.style.setProperty('--shine-angle', `${angle}deg`);
             root.style.setProperty('--rot-x', `${rotX}deg`);
             root.style.setProperty('--rot-y', `${rotY}deg`);
-            root.style.setProperty('--shadow-x', `${shadowX}px`);
-            root.style.setProperty('--shadow-y', `${shadowY}px`);
 
             requestAnimationFrame(animate);
         }
-
         animate();
 
         function handleMotion(event) {
-            let x = event.gamma; 
-            let y = event.beta - 45;
-            if (x > 50) x = 50; if (x < -50) x = -50;
-            if (y > 50) y = 50; if (y < -50) y = -50;
+            let x = event.gamma; let y = event.beta - 45;
+            if (x > 45) x = 45; if (x < -45) x = -45;
+            if (y > 45) y = 45; if (y < -45) y = -45;
             targetX = x; targetY = y;
         }
     </script>
