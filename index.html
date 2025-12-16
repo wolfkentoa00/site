@@ -6,22 +6,21 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Clear Glass">
+    <meta name="apple-mobile-web-app-title" content="Liquid OS">
 
-    <title>Clear Refractive Glass</title>
+    <title>Pristine Liquid OS</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            /* Physics Variables */
             --light-x: 50%;
             --light-y: 50%;
-            --rim-x: 0px;
-            --rim-y: 0px;
             --shine-angle: 135deg;
             --rot-x: 0deg;
             --rot-y: 0deg;
+            --rim-x: 0px;
+            --rim-y: 0px;
         }
 
         body {
@@ -30,203 +29,432 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            font-family: -apple-system, SF Pro Display, sans-serif;
+            font-family: -apple-system, SF Pro Text, sans-serif;
             background: #000;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- 1. DYNAMIC APPLE BACKGROUND --- */
+        .wallpaper {
+            position: absolute;
+            top: -25%; left: -25%;
+            width: 150%; height: 150%;
+            /* Sophisticated Mesh Gradient */
+            background: radial-gradient(at 0% 0%, rgba(255, 169, 249, 0.5) 0px, transparent 50%),
+                        radial-gradient(at 100% 0%, rgba(100, 220, 255, 0.5) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(150, 100, 255, 0.5) 0px, transparent 50%),
+                        radial-gradient(at 0% 100%, rgba(255, 100, 100, 0.5) 0px, transparent 50%),
+                        #000;
+            filter: blur(40px);
+            z-index: 0;
+            transition: transform 0.1s linear;
+            transform: translate(var(--rim-x), var(--rim-y)); /* Subtle parallax */
+        }
+
+        /* --- 2. GRID LAYOUT --- */
+        .app-grid {
+            position: absolute;
+            top: 60px;
+            width: 100%;
+            height: calc(100% - 100px);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 Columns like iOS */
+            grid-auto-rows: 90px;
+            gap: 15px 10px; /* Row Gap, Col Gap */
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            z-index: 10;
+            /* Hide scrollbar */
+            scrollbar-width: none; 
+        }
+        .app-grid::-webkit-scrollbar { display: none; }
+
+        /* --- 3. THE GLASS APP ICON --- */
+        .app-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
+            position: relative;
+            animation: popIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* 1. Vivid Wallpaper (Needs to be bright to show through clear glass) */
-        .wallpaper {
-            position: absolute;
-            width: 150%; height: 150%;
-            background: radial-gradient(circle at 50% 50%, 
-                #ff6b6b, #5563de, #000000 90%); 
-            background-size: 200% 200%;
-            z-index: 0;
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
-        .dock-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            padding: 30px;
-            z-index: 10;
-            transform-style: preserve-3d;
-            transform: perspective(1000px) rotateX(var(--rot-x)) rotateY(var(--rot-y));
-            transition: transform 0.1s linear;
-        }
-
-        /* --- 2. THE ULTRA-CLEAR GLASS BLOCK --- */
         .glass-block {
-            width: 120px;
-            height: 120px;
-            border-radius: 38px;
+            width: 68px; /* Standard iOS size approximation */
+            height: 68px;
+            border-radius: 18px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-decoration: none;
             
-            /* Ultra Clear Material */
-            background: rgba(255, 255, 255, 0.02); /* Almost invisible */
-            backdrop-filter: blur(15px) saturate(150%); /* Less blur, more color pop */
-            -webkit-backdrop-filter: blur(15px) saturate(150%);
+            /* The "Pristine" Glass Material */
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             
-            /* Delicate border definition */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            
-            /* INTERNAL REFRACTION LIGHTING (The new magic) 
-               Instead of a drop shadow underneath, we use INSET shadows 
-               that move with tilt to simulate light getting caught inside the edges. */
+            /* Internal Refraction (Light catching edges) */
             box-shadow: 
-                /* 1. Tight inner white definition */
-                inset 0 0 0 1px rgba(255,255,255,0.1),
-                /* 2. Dynamic bright edge (moves with tilt) */
-                inset var(--rim-x) var(--rim-y) 15px rgba(255, 255, 255, 0.7),
-                /* 3. Very subtle, tight external shadow just for grounding */
-                0 4px 10px rgba(0,0,0,0.2);
+                inset var(--rim-x) var(--rim-y) 8px rgba(255, 255, 255, 0.5),
+                0 4px 12px rgba(0,0,0,0.2);
             
-            overflow: hidden;
+            transition: transform 0.1s;
         }
 
-        /* Crisper Glint on the edge */
+        .glass-block:active {
+            transform: scale(0.92);
+            filter: brightness(0.8);
+        }
+
+        /* The Shiny Glint Overlay */
         .glass-block::after {
             content: '';
             position: absolute;
-            inset: 0; border-radius: 38px; padding: 1.5px;
-            /* Tighter gradient for sharper reflection */
-            background: radial-gradient(circle at var(--light-x) var(--light-y), rgba(255, 255, 255, 1) 0%, transparent 30%);
+            inset: 0; border-radius: 18px; padding: 1px;
+            background: radial-gradient(circle at var(--light-x) var(--light-y), rgba(255, 255, 255, 0.9) 0%, transparent 40%);
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor; mask-composite: exclude;
             pointer-events: none;
         }
 
-        /* --- 3. THE TINTED ICONS (Embedded closer) --- */
+        /* The Metallic/Glass Icon inside */
         .tinted-icon {
-            font-size: 52px;
+            font-size: 32px;
             z-index: 5;
             color: transparent;
             
+            /* Metallic Gradient Fill */
             background: linear-gradient(
                 var(--shine-angle), 
-                var(--brand-dark) 10%, 
-                var(--brand-light) 50%,
-                var(--brand-dark) 90%
+                var(--c-dark) 10%, 
+                var(--c-light) 50%,
+                var(--c-dark) 90%
             );
             background-size: 200% 200%;
             background-position: var(--light-x) var(--light-y);
             -webkit-background-clip: text;
-
-            /* Cleaner filters - closer to the glass surface */
-            filter: 
-                drop-shadow(0 0 1px rgba(255,255,255,0.5)) /* Sharp rim */
-                drop-shadow(0 2px 5px var(--brand-glow)); /* Subtle glow */
             
-            /* Reduced Z-depth so they feel embedded, not floating above */
-            transform: translateZ(5px); 
+            /* Shadow to lift it off the glass */
+            filter: drop-shadow(0 2px 4px var(--c-glow));
         }
-
-        /* Brand Color Definitions */
-        .snap { --brand-dark: #b3b000; --brand-light: #FFFC00; --brand-glow: rgba(255, 252, 0, 0.3); }
-        .tiktok { 
-            --brand-dark: #00b0a8; --brand-light: #ff0050; --brand-glow: rgba(0, 242, 234, 0.3);
-            background: linear-gradient(var(--shine-angle), #00f2ea, #ff0050, #00f2ea);
-            background-size: 200% 200%; background-position: var(--light-x) var(--light-y);
-            -webkit-background-clip: text;
-        }
-        .yt { --brand-dark: #a80000; --brand-light: #ff4d4d; --brand-glow: rgba(255, 0, 0, 0.3); }
-        .camera { --brand-dark: #666666; --brand-light: #ffffff; --brand-glow: rgba(255, 255, 255, 0.3); }
 
         .label {
-            position: absolute; bottom: 10px; font-size: 12px;
-            font-weight: 600; color: rgba(255, 255, 255, 0.5); pointer-events: none;
+            margin-top: 6px;
+            font-size: 11px;
+            color: white;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 70px;
         }
 
-        #start-btn {
-            position: absolute; bottom: 80px; padding: 14px 30px;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: white; border-radius: 40px; backdrop-filter: blur(10px);
-            font-weight: 700; z-index: 100;
+        /* --- 4. EDIT MODE (WIGGLE) --- */
+        @keyframes wiggle {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(-2deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(2deg); }
+            100% { transform: rotate(0deg); }
         }
+
+        .editing .glass-block {
+            animation: wiggle 0.25s linear infinite;
+            border: 1px solid rgba(255,255,255,0.4); /* Highlight border */
+        }
+        
+        .selected .glass-block {
+            background: rgba(255,255,255,0.3);
+            box-shadow: 0 0 15px white;
+            animation: none; /* Stop wiggling if selected for swap */
+            transform: scale(1.1);
+        }
+
+        /* Delete Badge (Visual only for now) */
+        .delete-badge {
+            display: none;
+            position: absolute;
+            top: -5px; left: -5px;
+            width: 20px; height: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            color: black;
+            font-size: 12px;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .editing .delete-badge { display: flex; }
+
+        /* --- 5. UI CONTROLS --- */
+        .control-bar {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 30px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn.primary { background: rgba(255, 255, 255, 0.2); color: white; }
+
     </style>
 </head>
 <body>
 
     <div class="wallpaper"></div>
+    
+    <div class="app-grid" id="grid">
+        </div>
 
-    <div class="dock-container">
-        <a href="snapchat://" class="glass-block snap">
-            <i class="fab fa-snapchat-ghost tinted-icon"></i>
-            <span class="label">Snap</span>
-        </a>
-        <a href="tiktok://" class="glass-block tiktok">
-            <i class="fab fa-tiktok tinted-icon"></i>
-            <span class="label">TikTok</span>
-        </a>
-        <a href="youtube://" class="glass-block yt">
-            <i class="fab fa-youtube tinted-icon"></i>
-            <span class="label">YouTube</span>
-        </a>
-        <a href="instagram://story-camera" class="glass-block camera">
-            <i class="fas fa-camera tinted-icon"></i>
-            <span class="label">Camera</span>
-        </a>
+    <div class="control-bar">
+        <button class="btn" onclick="toggleEdit()">Edit Home Screen</button>
+        <button class="btn primary" id="perm-btn" onclick="initGyro()">Enable Motion</button>
+        <button class="btn" onclick="addApp()" style="display:none;" id="add-btn">+</button>
     </div>
 
-    <button id="start-btn" onclick="initGyro()">Enable Clear Glass</button>
-
     <script>
-        function initGyro() {
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(p => {
-                    if (p === 'granted') { document.getElementById('start-btn').style.display = 'none'; window.addEventListener('deviceorientation', handleMotion); }
-                });
+        // --- 1. APP DATA DEFINITION ---
+        // Pre-defined list of pristine apps with specific FontAwesome icons and Brand Colors
+        const defaultApps = [
+            { name: "Phone", icon: "fas fa-phone", dark: "#2ecc71", light: "#a3e4d7" },
+            { name: "Messages", icon: "fas fa-comment", dark: "#2ecc71", light: "#a3e4d7" },
+            { name: "Safari", icon: "fas fa-compass", dark: "#3498db", light: "#aed6f1" },
+            { name: "Music", icon: "fas fa-music", dark: "#e74c3c", light: "#fadbd8" },
+            { name: "Photos", icon: "fas fa-images", dark: "#f1c40f", light: "#f9e79f" },
+            { name: "Camera", icon: "fas fa-camera", dark: "#7f8c8d", light: "#bdc3c7" },
+            { name: "Settings", icon: "fas fa-cog", dark: "#95a5a6", light: "#d0d3d4" },
+            { name: "Snapchat", icon: "fab fa-snapchat-ghost", dark: "#f1c40f", light: "#fff" },
+            { name: "TikTok", icon: "fab fa-tiktok", dark: "#2c3e50", light: "#e74c3c" },
+            { name: "Instagram", icon: "fab fa-instagram", dark: "#8e44ad", light: "#e91e63" },
+            { name: "YouTube", icon: "fab fa-youtube", dark: "#c0392b", light: "#e74c3c" },
+            { name: "X", icon: "fab fa-twitter", dark: "#000000", light: "#ffffff" }, // X is tricky, used Twitter icon
+            { name: "Spotify", icon: "fab fa-spotify", dark: "#27ae60", light: "#2ecc71" },
+            { name: "Netflix", icon: "fas fa-play", dark: "#c0392b", light: "#e74c3c" },
+            { name: "Discord", icon: "fab fa-discord", dark: "#5865F2", light: "#7289da" },
+            { name: "WhatsApp", icon: "fab fa-whatsapp", dark: "#25D366", light: "#2ecc71" },
+            { name: "FaceTime", icon: "fas fa-video", dark: "#2ecc71", light: "#a3e4d7" },
+            { name: "Maps", icon: "fas fa-map-marked-alt", dark: "#e67e22", light: "#f39c12" },
+            { name: "Wallet", icon: "fas fa-wallet", dark: "#2c3e50", light: "#34495e" },
+            { name: "Weather", icon: "fas fa-cloud-sun", dark: "#3498db", light: "#85c1e9" },
+        ];
+
+        let apps = [];
+        let isEditing = false;
+        let selectedIndex = null;
+
+        // --- 2. INITIALIZATION & RENDERING ---
+        
+        function init() {
+            // Load from LocalStorage or use default
+            const saved = localStorage.getItem('liquidLayout');
+            if (saved) {
+                apps = JSON.parse(saved);
             } else {
-                document.getElementById('start-btn').style.display = 'none'; window.addEventListener('deviceorientation', handleMotion);
+                apps = [...defaultApps];
+            }
+            render();
+        }
+
+        function render() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = ''; // Clear
+
+            apps.forEach((app, index) => {
+                const div = document.createElement('div');
+                div.className = 'app-container';
+                if (selectedIndex === index) div.classList.add('selected');
+                
+                // OnClick Logic
+                div.onclick = () => handleAppClick(index);
+
+                // Long Press Logic
+                let timer;
+                div.addEventListener('touchstart', () => { 
+                    timer = setTimeout(() => { if(!isEditing) toggleEdit(); }, 800); 
+                });
+                div.addEventListener('touchend', () => clearTimeout(timer));
+
+                // HTML Structure
+                div.innerHTML = `
+                    <div class="glass-block" style="--c-dark: ${app.dark}; --c-light: ${app.light}; --c-glow: ${app.dark}80;">
+                        <div class="delete-badge" onclick="removeApp(event, ${index})"><i class="fas fa-minus"></i></div>
+                        <i class="${app.icon} tinted-icon"></i>
+                    </div>
+                    <span class="label">${app.name}</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // --- 3. INTERACTION LOGIC ---
+
+        function handleAppClick(index) {
+            if (isEditing) {
+                // Swap Logic
+                if (selectedIndex === null) {
+                    // Select first item
+                    selectedIndex = index;
+                    render();
+                } else if (selectedIndex === index) {
+                    // Deselect
+                    selectedIndex = null;
+                    render();
+                } else {
+                    // Swap
+                    const temp = apps[selectedIndex];
+                    apps[selectedIndex] = apps[index];
+                    apps[index] = temp;
+                    selectedIndex = null;
+                    save();
+                    render();
+                }
+            } else {
+                // Normal Mode: Open App
+                // Since these are fake, we just wobble the screen or alert
+                // In a real version, this would be: window.location.href = app.url;
+                
+                // Try to open generic scheme
+                const scheme = apps[index].name.toLowerCase() + "://";
+                // alert("Opening " + apps[index].name);
+                window.location.href = scheme; 
             }
         }
 
-        let currentX = 0, currentY = 0;
-        let targetX = 0, targetY = 0;
+        function toggleEdit() {
+            isEditing = !isEditing;
+            const grid = document.getElementById('grid');
+            const addBtn = document.getElementById('add-btn');
+            
+            if (isEditing) {
+                grid.classList.add('editing');
+                addBtn.style.display = 'block';
+                document.querySelector('.btn').innerText = "Done";
+            } else {
+                grid.classList.remove('editing');
+                selectedIndex = null;
+                addBtn.style.display = 'none';
+                document.querySelector('.btn').innerText = "Edit Home Screen";
+                render(); // Clear selection visuals
+            }
+        }
 
-        function animate() {
-            currentX += (targetX - currentX) * 0.08;
-            currentY += (targetY - currentY) * 0.08;
+        function addApp() {
+            // Adds a generic app for demo purposes
+            apps.push({ 
+                name: "New App", 
+                icon: "fas fa-star", 
+                dark: "#ffffff", 
+                light: "#ffffff" 
+            });
+            save();
+            render();
+            // Scroll to bottom
+            setTimeout(() => {
+                const grid = document.getElementById('grid');
+                grid.scrollTop = grid.scrollHeight;
+            }, 100);
+        }
+
+        function removeApp(e, index) {
+            e.stopPropagation(); // Prevent clicking the app itself
+            if(confirm("Delete " + apps[index].name + "?")) {
+                apps.splice(index, 1);
+                save();
+                render();
+            }
+        }
+
+        function save() {
+            localStorage.setItem('liquidLayout', JSON.stringify(apps));
+        }
+
+        // --- 4. GYROSCOPE PHYSICS (REFINED) ---
+        
+        function initGyro() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(p => {
+                    if (p === 'granted') { 
+                        document.getElementById('perm-btn').style.display = 'none'; 
+                        window.addEventListener('deviceorientation', handleMotion); 
+                    }
+                });
+            } else {
+                document.getElementById('perm-btn').style.display = 'none'; 
+                window.addEventListener('deviceorientation', handleMotion);
+            }
+        }
+
+        let curX = 0, curY = 0;
+        let tarX = 0, tarY = 0;
+
+        function animateLoop() {
+            // Smooth Interpolation
+            curX += (tarX - curX) * 0.1;
+            curY += (tarY - curY) * 0.1;
 
             const root = document.documentElement;
             
-            const lightX = 50 + (currentX * 1.5); 
-            const lightY = 50 + (currentY * 1.5);
-            const angle = 135 + (currentX / 1.5);
-            
-            // Calculate Rim Lighting (Opposite to tilt)
-            const rimX = (currentX / 2.5) * -1;
-            const rimY = ((currentY - 5) / 2.5) * -1;
+            // Lighting Variables
+            const lightX = 50 + (curX * 1.5); 
+            const lightY = 50 + (curY * 1.5);
+            const angle = 135 + (curX);
 
-            const rotY = (currentX / 6).toFixed(2);
-            const rotX = (-currentY / 6).toFixed(2);
+            // Rim Light (Inner Shadow)
+            const rimX = (curX / 3) * -1;
+            const rimY = (curY / 3) * -1;
 
             root.style.setProperty('--light-x', `${lightX}%`);
             root.style.setProperty('--light-y', `${lightY}%`);
             root.style.setProperty('--rim-x', `${rimX}px`);
             root.style.setProperty('--rim-y', `${rimY}px`);
             root.style.setProperty('--shine-angle', `${angle}deg`);
-            root.style.setProperty('--rot-x', `${rotX}deg`);
-            root.style.setProperty('--rot-y', `${rotY}deg`);
 
-            requestAnimationFrame(animate);
+            requestAnimationFrame(animateLoop);
         }
-        animate();
+        animateLoop();
 
         function handleMotion(event) {
-            let x = event.gamma; let y = event.beta - 45;
+            let x = event.gamma; // -90 to 90
+            let y = event.beta;  // -180 to 180
+            
+            // Calibration for holding phone upright
+            y = y - 45;
+
+            // Clamp
             if (x > 45) x = 45; if (x < -45) x = -45;
             if (y > 45) y = 45; if (y < -45) y = -45;
-            targetX = x; targetY = y;
+
+            tarX = x; 
+            tarY = y;
         }
+
+        // Run on load
+        init();
+
     </script>
 </body>
 </html>
