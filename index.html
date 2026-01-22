@@ -2,459 +2,223 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Liquid OS">
-
-    <title>Pristine Liquid OS</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elevated Garlic-Butter Ramen (For Two)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --light-x: 50%;
-            --light-y: 50%;
-            --shine-angle: 135deg;
-            --rot-x: 0deg;
-            --rot-y: 0deg;
-            --rim-x: 0px;
-            --rim-y: 0px;
-        }
-
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            font-family: -apple-system, SF Pro Text, sans-serif;
-            background: #000;
-            user-select: none;
-            -webkit-user-select: none;
+            font-family: 'Inter', sans-serif;
         }
-
-        /* --- 1. DYNAMIC APPLE BACKGROUND --- */
-        .wallpaper {
-            position: absolute;
-            top: -25%; left: -25%;
-            width: 150%; height: 150%;
-            /* Sophisticated Mesh Gradient */
-            background: radial-gradient(at 0% 0%, rgba(255, 169, 249, 0.5) 0px, transparent 50%),
-                        radial-gradient(at 100% 0%, rgba(100, 220, 255, 0.5) 0px, transparent 50%),
-                        radial-gradient(at 100% 100%, rgba(150, 100, 255, 0.5) 0px, transparent 50%),
-                        radial-gradient(at 0% 100%, rgba(255, 100, 100, 0.5) 0px, transparent 50%),
-                        #000;
-            filter: blur(40px);
-            z-index: 0;
-            transition: transform 0.1s linear;
-            transform: translate(var(--rim-x), var(--rim-y)); /* Subtle parallax */
-        }
-
-        /* --- 2. GRID LAYOUT --- */
-        .app-grid {
-            position: absolute;
-            top: 60px;
-            width: 100%;
-            height: calc(100% - 100px);
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4 Columns like iOS */
-            grid-auto-rows: 90px;
-            gap: 15px 10px; /* Row Gap, Col Gap */
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            z-index: 10;
-            /* Hide scrollbar */
-            scrollbar-width: none; 
-        }
-        .app-grid::-webkit-scrollbar { display: none; }
-
-        /* --- 3. THE GLASS APP ICON --- */
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            position: relative;
-            animation: popIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .glass-block {
-            width: 68px; /* Standard iOS size approximation */
-            height: 68px;
-            border-radius: 18px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
-            /* The "Pristine" Glass Material */
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px) saturate(160%);
-            -webkit-backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            
-            /* Internal Refraction (Light catching edges) */
-            box-shadow: 
-                inset var(--rim-x) var(--rim-y) 8px rgba(255, 255, 255, 0.5),
-                0 4px 12px rgba(0,0,0,0.2);
-            
-            transition: transform 0.1s;
-        }
-
-        .glass-block:active {
-            transform: scale(0.92);
-            filter: brightness(0.8);
-        }
-
-        /* The Shiny Glint Overlay */
-        .glass-block::after {
-            content: '';
-            position: absolute;
-            inset: 0; border-radius: 18px; padding: 1px;
-            background: radial-gradient(circle at var(--light-x) var(--light-y), rgba(255, 255, 255, 0.9) 0%, transparent 40%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude;
-            pointer-events: none;
-        }
-
-        /* The Metallic/Glass Icon inside */
-        .tinted-icon {
-            font-size: 32px;
-            z-index: 5;
-            color: transparent;
-            
-            /* Metallic Gradient Fill */
-            background: linear-gradient(
-                var(--shine-angle), 
-                var(--c-dark) 10%, 
-                var(--c-light) 50%,
-                var(--c-dark) 90%
-            );
-            background-size: 200% 200%;
-            background-position: var(--light-x) var(--light-y);
-            -webkit-background-clip: text;
-            
-            /* Shadow to lift it off the glass */
-            filter: drop-shadow(0 2px 4px var(--c-glow));
-        }
-
-        .label {
-            margin-top: 6px;
-            font-size: 11px;
-            color: white;
-            font-weight: 500;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 70px;
-        }
-
-        /* --- 4. EDIT MODE (WIGGLE) --- */
-        @keyframes wiggle {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(-2deg); }
-            50% { transform: rotate(0deg); }
-            75% { transform: rotate(2deg); }
-            100% { transform: rotate(0deg); }
-        }
-
-        .editing .glass-block {
-            animation: wiggle 0.25s linear infinite;
-            border: 1px solid rgba(255,255,255,0.4); /* Highlight border */
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
         }
         
-        .selected .glass-block {
-            background: rgba(255,255,255,0.3);
-            box-shadow: 0 0 15px white;
-            animation: none; /* Stop wiggling if selected for swap */
-            transform: scale(1.1);
+        /* Custom Checkbox Styling */
+        input[type="checkbox"] {
+            accent-color: #d97706; /* Amber-600 */
+            width: 1.2rem;
+            height: 1.2rem;
         }
 
-        /* Delete Badge (Visual only for now) */
-        .delete-badge {
-            display: none;
-            position: absolute;
-            top: -5px; left: -5px;
-            width: 20px; height: 20px;
-            background: rgba(255,255,255,0.8);
-            border-radius: 50%;
-            color: black;
-            font-size: 12px;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        /* Print Specific Styling */
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-container {
+                box-shadow: none;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            /* Ensure text is black for saving ink */
+            p, li, h1, h2, h3, h4 {
+                color: black !important;
+            }
+            /* Hide URL footers if possible (browser dependent) */
+            @page {
+                margin: 1cm;
+            }
         }
-        .editing .delete-badge { display: flex; }
-
-        /* --- 5. UI CONTROLS --- */
-        .control-bar {
-            position: absolute;
-            bottom: 30px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            z-index: 100;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            background: rgba(30, 30, 30, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 30px;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn.primary { background: rgba(255, 255, 255, 0.2); color: white; }
-
     </style>
 </head>
-<body>
+<body class="bg-stone-100 text-stone-800 min-h-screen p-4 md:p-8">
 
-    <div class="wallpaper"></div>
-    
-    <div class="app-grid" id="grid">
+    <!-- Main Recipe Card -->
+    <main class="print-container max-w-2xl mx-auto bg-white shadow-xl rounded-none md:rounded-lg overflow-hidden border-t-8 border-amber-600">
+        
+        <!-- Header -->
+        <header class="p-8 pb-4 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-stone-900 mb-2">Garlic-Butter Chicken Ramen</h1>
+            <p class="text-stone-500 italic">Chef-Grade Elevation • No Dairy • Double Serving</p>
+            
+            <div class="flex justify-center gap-6 mt-6 text-sm font-semibold text-stone-600 uppercase tracking-wider">
+                <div class="flex flex-col items-center">
+                    <span class="text-amber-600">Prep</span>
+                    <span>5 Min</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-amber-600">Cook</span>
+                    <span>8 Min</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-amber-600">Yields</span>
+                    <span>2 Bowls</span>
+                </div>
+            </div>
+        </header>
+
+        <hr class="border-stone-200 mx-8">
+
+        <!-- Controls (Hidden on Print) -->
+        <div class="no-print p-6 flex justify-center bg-stone-50">
+            <button onclick="window.print()" class="flex items-center gap-2 bg-stone-900 hover:bg-stone-700 text-white font-medium py-3 px-6 rounded-full transition-all active:scale-95 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 14h12v8H6z"></path></svg>
+                Print Recipe Card
+            </button>
         </div>
 
-    <div class="control-bar">
-        <button class="btn" onclick="toggleEdit()">Edit Home Screen</button>
-        <button class="btn primary" id="perm-btn" onclick="initGyro()">Enable Motion</button>
-        <button class="btn" onclick="addApp()" style="display:none;" id="add-btn">+</button>
+        <div class="p-8 pt-4">
+            <!-- Ingredients Section -->
+            <section class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 mb-4 border-b-2 border-amber-100 pb-2">Mise en Place</h2>
+                
+                <div class="grid md:grid-cols-2 gap-x-8 gap-y-2">
+                    <!-- Base -->
+                    <div class="col-span-full mb-2">
+                        <h3 class="text-sm font-bold text-stone-400 uppercase tracking-wide mb-2">The Base</h3>
+                    </div>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>2 packs <strong>Chicken Ramen</strong></span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>4 cups <strong>Water</strong></span>
+                    </label>
+
+                    <!-- Flavor -->
+                    <div class="col-span-full mt-4 mb-2">
+                        <h3 class="text-sm font-bold text-stone-400 uppercase tracking-wide mb-2">Aromatics & Fats</h3>
+                    </div>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>2 tbsp <strong>Unsalted Butter</strong></span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>4 cloves <strong>Garlic</strong> (minced)</span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>2 stalks <strong>Scallions</strong> (separated)</span>
+                    </label>
+
+                    <!-- Seasoning -->
+                    <div class="col-span-full mt-4 mb-2">
+                        <h3 class="text-sm font-bold text-stone-400 uppercase tracking-wide mb-2">Seasoning Balance</h3>
+                    </div>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>2 tsp <strong>Soy Sauce</strong></span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>1 tsp <strong>Brown Sugar</strong></span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>2 tsp <strong>Sesame Oil</strong></span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer hover:bg-stone-50 p-2 rounded">
+                        <input type="checkbox">
+                        <span>2 large <strong>Eggs</strong></span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Instructions Section -->
+            <section>
+                <h2 class="text-2xl font-bold text-stone-900 mb-6 border-b-2 border-amber-100 pb-2">Method</h2>
+                
+                <div class="space-y-6">
+                    <!-- Step 1 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-stone-900 text-white rounded-full flex items-center justify-center font-bold font-serif">1</div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Bloom the Aromatics</h3>
+                            <p class="text-stone-600 leading-relaxed">
+                                In a medium pot over <strong>medium heat</strong>, melt the <span class="text-amber-700 font-medium">2 tbsp butter</span>. Add the minced garlic and the <em>white parts</em> of the scallions. Sauté for 60–90 seconds until fragrant and pale gold. Do not burn.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-stone-900 text-white rounded-full flex items-center justify-center font-bold font-serif">2</div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Build the Compound Broth</h3>
+                            <p class="text-stone-600 leading-relaxed">
+                                Pour in <span class="text-amber-700 font-medium">4 cups of water</span> and increase heat to high. Stir in the soy sauce, brown sugar, and <strong>both</strong> chicken seasoning packets. Bring to a rolling boil.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-stone-900 text-white rounded-full flex items-center justify-center font-bold font-serif">3</div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Cook Noodles</h3>
+                            <p class="text-stone-600 leading-relaxed">
+                                Add both noodle blocks to the boiling broth. Cook for exactly <strong>2 minutes</strong>. (The noodles should be slightly underdone as they will sit in hot broth).
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-stone-900 text-white rounded-full flex items-center justify-center font-bold font-serif">4</div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">The "Butter Baste" Poach</h3>
+                            <p class="text-stone-600 leading-relaxed">
+                                Reduce heat to a gentle simmer (medium-low). Crack the <span class="text-amber-700 font-medium">2 eggs</span> carefully into the broth alongside the noodles. <strong>Cover the pot</strong> and let steam for 3 minutes for jammy yolks.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-stone-900 text-white rounded-full flex items-center justify-center font-bold font-serif">5</div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Finish & Serve</h3>
+                            <p class="text-stone-600 leading-relaxed">
+                                Divide noodles and broth between two bowls using tongs. Top each with an egg. Drizzle <span class="text-amber-700 font-medium">1 tsp sesame oil</span> over each bowl and garnish with the remaining green scallions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer Notes -->
+        <footer class="bg-amber-50 p-8 border-t border-amber-100">
+            <h4 class="font-bold text-amber-800 mb-2">Chef's Notes</h4>
+            <ul class="text-sm text-amber-900 space-y-1 list-disc pl-5">
+                <li><strong>Spice Level:</strong> If you want heat, add Chili Crisp <em>after</em> plating to preserve the chicken broth flavor.</li>
+                <li><strong>Protein:</strong> If adding rotisserie chicken, toss it in during Step 3 to warm it through.</li>
+            </ul>
+        </footer>
+    </main>
+
+    <div class="no-print text-center mt-8 text-stone-400 text-sm pb-8">
+        &copy; 2026 Home Kitchen Elevation
     </div>
 
-    <script>
-        // --- 1. APP DATA DEFINITION ---
-        // Pre-defined list of pristine apps with specific FontAwesome icons and Brand Colors
-        const defaultApps = [
-            { name: "Phone", icon: "fas fa-phone", dark: "#2ecc71", light: "#a3e4d7" },
-            { name: "Messages", icon: "fas fa-comment", dark: "#2ecc71", light: "#a3e4d7" },
-            { name: "Safari", icon: "fas fa-compass", dark: "#3498db", light: "#aed6f1" },
-            { name: "Music", icon: "fas fa-music", dark: "#e74c3c", light: "#fadbd8" },
-            { name: "Photos", icon: "fas fa-images", dark: "#f1c40f", light: "#f9e79f" },
-            { name: "Camera", icon: "fas fa-camera", dark: "#7f8c8d", light: "#bdc3c7" },
-            { name: "Settings", icon: "fas fa-cog", dark: "#95a5a6", light: "#d0d3d4" },
-            { name: "Snapchat", icon: "fab fa-snapchat-ghost", dark: "#f1c40f", light: "#fff" },
-            { name: "TikTok", icon: "fab fa-tiktok", dark: "#2c3e50", light: "#e74c3c" },
-            { name: "Instagram", icon: "fab fa-instagram", dark: "#8e44ad", light: "#e91e63" },
-            { name: "YouTube", icon: "fab fa-youtube", dark: "#c0392b", light: "#e74c3c" },
-            { name: "X", icon: "fab fa-twitter", dark: "#000000", light: "#ffffff" }, // X is tricky, used Twitter icon
-            { name: "Spotify", icon: "fab fa-spotify", dark: "#27ae60", light: "#2ecc71" },
-            { name: "Netflix", icon: "fas fa-play", dark: "#c0392b", light: "#e74c3c" },
-            { name: "Discord", icon: "fab fa-discord", dark: "#5865F2", light: "#7289da" },
-            { name: "WhatsApp", icon: "fab fa-whatsapp", dark: "#25D366", light: "#2ecc71" },
-            { name: "FaceTime", icon: "fas fa-video", dark: "#2ecc71", light: "#a3e4d7" },
-            { name: "Maps", icon: "fas fa-map-marked-alt", dark: "#e67e22", light: "#f39c12" },
-            { name: "Wallet", icon: "fas fa-wallet", dark: "#2c3e50", light: "#34495e" },
-            { name: "Weather", icon: "fas fa-cloud-sun", dark: "#3498db", light: "#85c1e9" },
-        ];
-
-        let apps = [];
-        let isEditing = false;
-        let selectedIndex = null;
-
-        // --- 2. INITIALIZATION & RENDERING ---
-        
-        function init() {
-            // Load from LocalStorage or use default
-            const saved = localStorage.getItem('liquidLayout');
-            if (saved) {
-                apps = JSON.parse(saved);
-            } else {
-                apps = [...defaultApps];
-            }
-            render();
-        }
-
-        function render() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = ''; // Clear
-
-            apps.forEach((app, index) => {
-                const div = document.createElement('div');
-                div.className = 'app-container';
-                if (selectedIndex === index) div.classList.add('selected');
-                
-                // OnClick Logic
-                div.onclick = () => handleAppClick(index);
-
-                // Long Press Logic
-                let timer;
-                div.addEventListener('touchstart', () => { 
-                    timer = setTimeout(() => { if(!isEditing) toggleEdit(); }, 800); 
-                });
-                div.addEventListener('touchend', () => clearTimeout(timer));
-
-                // HTML Structure
-                div.innerHTML = `
-                    <div class="glass-block" style="--c-dark: ${app.dark}; --c-light: ${app.light}; --c-glow: ${app.dark}80;">
-                        <div class="delete-badge" onclick="removeApp(event, ${index})"><i class="fas fa-minus"></i></div>
-                        <i class="${app.icon} tinted-icon"></i>
-                    </div>
-                    <span class="label">${app.name}</span>
-                `;
-                grid.appendChild(div);
-            });
-        }
-
-        // --- 3. INTERACTION LOGIC ---
-
-        function handleAppClick(index) {
-            if (isEditing) {
-                // Swap Logic
-                if (selectedIndex === null) {
-                    // Select first item
-                    selectedIndex = index;
-                    render();
-                } else if (selectedIndex === index) {
-                    // Deselect
-                    selectedIndex = null;
-                    render();
-                } else {
-                    // Swap
-                    const temp = apps[selectedIndex];
-                    apps[selectedIndex] = apps[index];
-                    apps[index] = temp;
-                    selectedIndex = null;
-                    save();
-                    render();
-                }
-            } else {
-                // Normal Mode: Open App
-                // Since these are fake, we just wobble the screen or alert
-                // In a real version, this would be: window.location.href = app.url;
-                
-                // Try to open generic scheme
-                const scheme = apps[index].name.toLowerCase() + "://";
-                // alert("Opening " + apps[index].name);
-                window.location.href = scheme; 
-            }
-        }
-
-        function toggleEdit() {
-            isEditing = !isEditing;
-            const grid = document.getElementById('grid');
-            const addBtn = document.getElementById('add-btn');
-            
-            if (isEditing) {
-                grid.classList.add('editing');
-                addBtn.style.display = 'block';
-                document.querySelector('.btn').innerText = "Done";
-            } else {
-                grid.classList.remove('editing');
-                selectedIndex = null;
-                addBtn.style.display = 'none';
-                document.querySelector('.btn').innerText = "Edit Home Screen";
-                render(); // Clear selection visuals
-            }
-        }
-
-        function addApp() {
-            // Adds a generic app for demo purposes
-            apps.push({ 
-                name: "New App", 
-                icon: "fas fa-star", 
-                dark: "#ffffff", 
-                light: "#ffffff" 
-            });
-            save();
-            render();
-            // Scroll to bottom
-            setTimeout(() => {
-                const grid = document.getElementById('grid');
-                grid.scrollTop = grid.scrollHeight;
-            }, 100);
-        }
-
-        function removeApp(e, index) {
-            e.stopPropagation(); // Prevent clicking the app itself
-            if(confirm("Delete " + apps[index].name + "?")) {
-                apps.splice(index, 1);
-                save();
-                render();
-            }
-        }
-
-        function save() {
-            localStorage.setItem('liquidLayout', JSON.stringify(apps));
-        }
-
-        // --- 4. GYROSCOPE PHYSICS (REFINED) ---
-        
-        function initGyro() {
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(p => {
-                    if (p === 'granted') { 
-                        document.getElementById('perm-btn').style.display = 'none'; 
-                        window.addEventListener('deviceorientation', handleMotion); 
-                    }
-                });
-            } else {
-                document.getElementById('perm-btn').style.display = 'none'; 
-                window.addEventListener('deviceorientation', handleMotion);
-            }
-        }
-
-        let curX = 0, curY = 0;
-        let tarX = 0, tarY = 0;
-
-        function animateLoop() {
-            // Smooth Interpolation
-            curX += (tarX - curX) * 0.1;
-            curY += (tarY - curY) * 0.1;
-
-            const root = document.documentElement;
-            
-            // Lighting Variables
-            const lightX = 50 + (curX * 1.5); 
-            const lightY = 50 + (curY * 1.5);
-            const angle = 135 + (curX);
-
-            // Rim Light (Inner Shadow)
-            const rimX = (curX / 3) * -1;
-            const rimY = (curY / 3) * -1;
-
-            root.style.setProperty('--light-x', `${lightX}%`);
-            root.style.setProperty('--light-y', `${lightY}%`);
-            root.style.setProperty('--rim-x', `${rimX}px`);
-            root.style.setProperty('--rim-y', `${rimY}px`);
-            root.style.setProperty('--shine-angle', `${angle}deg`);
-
-            requestAnimationFrame(animateLoop);
-        }
-        animateLoop();
-
-        function handleMotion(event) {
-            let x = event.gamma; // -90 to 90
-            let y = event.beta;  // -180 to 180
-            
-            // Calibration for holding phone upright
-            y = y - 45;
-
-            // Clamp
-            if (x > 45) x = 45; if (x < -45) x = -45;
-            if (y > 45) y = 45; if (y < -45) y = -45;
-
-            tarX = x; 
-            tarY = y;
-        }
-
-        // Run on load
-        init();
-
-    </script>
 </body>
 </html>
+
