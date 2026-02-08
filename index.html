@@ -6,474 +6,392 @@
     <title>SNKRS</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://www.nike.com/favicon.ico"> <style>
+    <style>
         :root {
-            --bg-color: #1c1c1c;
-            --card-bg: #2a2a2a;
+            --bg-color: #111111;
+            --card-bg: #1c1c1c;
             --text-color: #ffffff;
             --sub-text: #b0b0b0;
             --nike-red: #fa1e32;
-            --nav-height: 60px;
-            --safe-area-top: env(safe-area-inset-top);
-            --safe-area-bottom: env(safe-area-inset-bottom);
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* --- Header --- */
-        .app-header {
-            padding-top: calc(var(--safe-area-top) + 10px);
-            padding-bottom: 10px;
-            padding-left: 20px;
-            padding-right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--bg-color);
-            z-index: 100;
-        }
-
-        .snkrs-logo {
-            color: var(--nike-red);
-            font-weight: 900;
-            font-size: 24px;
-            letter-spacing: -1px;
-        }
-
-        .header-icons svg {
-            width: 24px;
-            height: 24px;
-            fill: var(--text-color);
-            margin-left: 15px;
-        }
-
-        /* --- Main Content Area --- */
-        .main-container {
-            flex: 1;
-            overflow-y: auto;
-            /* Padding for top header and bottom nav */
-            padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom));
-        }
-
-        .tab-content {
-            display: none; /* Hidden by default */
-            padding: 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* --- Reusable Components --- */
-        .btn {
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-weight: 600;
-            text-align: center;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-dark { background-color: #333; color: white; }
-        .btn-light { background-color: white; color: black; }
-        .btn-soldout { background-color: #555; color: #888; pointer-events: none;}
-
-        /* --- Feed Tab Styles --- */
-        .feed-card {
-            background-color: white; /* Often white cards on dark bg in SNKRS */
-            color: black;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 30px;
-        }
-        .feed-img { width: 100%; height: auto; display: block; }
-        .feed-info { padding: 20px; }
-        .feed-title { font-size: 14px; color: #666; margin-bottom: 5px;}
-        .feed-name { font-size: 24px; font-weight: 700; margin-bottom: 20px;}
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* Special "Got 'Em" simulation style */
-        .got-em-card {
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            text-align: center;
-        }
-        .got-em-header {
-            background-color: var(--nike-red);
-            padding: 15px;
-            font-weight: 900;
-            font-size: 20px;
-            text-transform: uppercase;
-        }
+        /* UTILS */
+        .hidden { display: none !important; }
+        .btn { border: none; outline: none; font-weight: 700; cursor: pointer; }
+        
+        /* VIEWS CONTAINER */
+        #main-view { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; padding-bottom: calc(60px + var(--safe-bottom)); }
 
-        /* --- In Stock / Grid Styles --- */
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;}
-        .filter-btn { padding: 8px 16px; background: var(--card-bg); border-radius: 20px; font-size: 14px; white-space: nowrap;}
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .grid-item { background: #f5f5f5; color: black; border-radius: 10px; overflow: hidden; padding-bottom: 15px;}
-        .grid-img { width: 100%; height: auto; mix-blend-mode: multiply;}
-        .grid-info { padding: 10px; }
-        .grid-name { font-weight: 600; font-size: 14px; margin-bottom: 5px; height: 40px; overflow: hidden;}
-        .grid-price { font-size: 14px; color: #555;}
+        /* HEADER */
+        .header { padding: calc(var(--safe-top) + 10px) 20px 10px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); z-index: 50; position: sticky; top: 0;}
+        .logo { color: var(--nike-red); font-weight: 900; font-size: 24px; letter-spacing: -1px; font-style: italic; }
+        .header-icons svg { width: 26px; height: 26px; fill: white; margin-left: 15px; }
 
-        /* --- Profile Styles --- */
-        .profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
-        .profile-pic { width: 100px; height: 100px; background-color: #ccc; border-radius: 50%; margin-bottom: 10px; background-image: url('image_2.png'); background-size: 200%; background-position: top center;}
-        .profile-menu-item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #333; font-size: 16px;}
-        .member-card { background-color: #111; padding: 20px; border-radius: 15px; margin-top: 30px; min-height: 200px; display: flex; flex-direction: column; justify-content: space-between;}
+        /* FEED (HOME) */
+        .feed-card { margin-bottom: 2px; position: relative; cursor: pointer; }
+        .feed-img { width: 100%; height: 450px; object-fit: cover; display: block; }
+        .feed-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
+        .feed-sub { font-size: 14px; color: #ddd; margin-bottom: 4px; }
+        .feed-title { font-size: 28px; font-weight: 800; text-transform: uppercase; line-height: 1; margin-bottom: 10px; }
+        .feed-btn { background: white; color: black; padding: 10px 25px; border-radius: 20px; font-size: 14px; display: inline-block; }
 
-        /* --- Maps Styles --- */
-        .map-container img { width: 100%; height: auto; border-radius: 15px; }
+        /* PRODUCT PAGE */
+        #product-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; overflow-y: auto; padding-bottom: 100px; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        #product-page.active { transform: translateX(0); }
+        
+        .prod-nav { position: absolute; top: var(--safe-top); left: 0; width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; z-index: 101; }
+        .back-btn { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        
+        .prod-hero { width: 100%; height: 50vh; background: #f6f6f6; display: flex; align-items: center; justify-content: center; position: relative; }
+        .prod-hero img { width: 90%; height: auto; mix-blend-mode: multiply; }
+        
+        .prod-details { padding: 20px; }
+        .prod-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .prod-name { font-size: 24px; font-weight: 700; width: 70%; line-height: 1.1; }
+        .prod-price { font-size: 18px; font-weight: 500; }
+        .prod-sub { color: var(--sub-text); font-size: 14px; margin-bottom: 20px; }
+        .prod-desc { color: #ccc; font-size: 15px; line-height: 1.5; margin-bottom: 30px; }
+        
+        .size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
+        .size-opt { padding: 15px; border: 1px solid #333; border-radius: 8px; text-align: center; color: white; font-weight: 600; }
+        .size-opt.selected { border-color: white; background: #333; }
 
-        /* --- Upcoming Styles --- */
-        .date-header { font-weight: 700; margin-bottom: 15px; margin-top: 20px;}
-        .drop-item { display: flex; gap: 15px; margin-bottom: 20px; background: var(--card-bg); padding: 15px; border-radius: 15px;}
-        .drop-img { width: 100px; height: 100px; object-fit: cover; border-radius: 10px; background: white;}
-        .drop-info { flex: 1; display: flex; flex-direction: column; justify-content: center;}
+        .buy-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px calc(15px + var(--safe-bottom)); background: var(--bg-color); border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; z-index: 102; }
+        .buy-btn { flex: 1; background: white; color: black; padding: 16px; border-radius: 30px; font-size: 16px; text-align: center; font-weight: 700; }
 
-        /* --- Bottom Navigation --- */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: calc(var(--nav-height) + var(--safe-area-bottom));
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-start;
-            padding-top: 10px;
-            border-top: 1px solid #333;
-            padding-bottom: var(--safe-area-bottom);
-            z-index: 100;
-        }
+        /* PROCESSING OVERLAY */
+        #processing-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .process-text { font-weight: 600; font-size: 16px; letter-spacing: 0.5px; }
 
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--sub-text);
-            font-size: 10px;
-            cursor: pointer;
-        }
-        .nav-item.active { color: var(--text-color); }
-        .nav-item svg { width: 24px; height: 24px; fill: currentColor; margin-bottom: 4px; }
+        /* GOT 'EM OVERLAY */
+        #got-em-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 300; display: flex; flex-direction: column; align-items: center; padding-top: 15vh; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        #got-em-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .got-em-text { font-family: 'Impact', sans-serif; font-size: 120px; text-transform: uppercase; line-height: 0.85; text-align: center; color: #e5e5e5; margin-bottom: 20px; letter-spacing: -2px; transform: scaleY(1.1); }
+        .got-em-img { width: 90%; max-width: 400px; height: auto; margin-bottom: 40px; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5)); transform: rotate(-5deg); }
+        .share-btn { background: white; color: black; width: 80%; padding: 18px; border-radius: 30px; font-weight: 700; font-size: 16px; margin-top: auto; margin-bottom: calc(50px + var(--safe-bottom)); text-align: center;}
+        .close-got-em { position: absolute; top: calc(var(--safe-top) + 15px); right: 20px; width: 36px; height: 36px; background: #333; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
 
-        /* --- Settings Modal (For Adding Shoe) --- */
-        #settings-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .settings-content {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 400px;
-        }
-        .settings-content h2 { margin-bottom: 20px; text-align: center;}
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; margin-bottom: 5px; font-size: 12px; color: var(--sub-text);}
-        .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #555; background: #333; color: white;}
+        /* TAB BAR */
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(60px + var(--safe-bottom)); background: var(--bg-color); border-top: 1px solid #222; display: flex; justify-content: space-around; padding-top: 10px; padding-bottom: var(--safe-bottom); z-index: 90; }
+        .tab { display: flex; flex-direction: column; align-items: center; color: #666; font-size: 10px; font-weight: 600; }
+        .tab.active { color: white; }
+        .tab svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
+
+        /* SETTINGS MODAL */
+        #settings-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .settings-box { background: #222; padding: 25px; border-radius: 20px; width: 100%; max-width: 350px; }
+        .settings-box input { width: 100%; padding: 12px; background: #333; border: none; color: white; margin-bottom: 15px; border-radius: 8px; }
+        .settings-box h3 { margin-bottom: 15px; text-align: center; }
+
+        /* PROFILE VIEW */
+        .profile-header { padding: 40px 20px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid #222; }
+        .p-pic { width: 80px; height: 80px; background: #333; border-radius: 50%; margin-bottom: 15px; background-image: url('https://static.nike.com/a/images/f_auto/dpr_3.0,cs_srgb/w_300,c_limit/3e09848c-ac70-449e-953e-52622f975440/nike-just-do-it.jpg'); background-size: cover;}
+        .p-name { font-size: 20px; font-weight: 700; margin-bottom: 5px; }
+        .p-sub { color: #666; font-size: 14px; }
+        .menu-item { padding: 20px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+
     </style>
 </head>
 <body>
 
-    <header class="app-header">
-        <div class="snkrs-logo">SNKRS</div>
-        <div class="header-icons">
-            <svg viewBox="0 0 24 24"><path d="M21.71 20.29L17 15.61A9.22 9.22 0 0 0 19 10.5A9.5 9.5 0 1 0 9.5 20a9.22 9.22 0 0 0 5.11-2l4.68 4.71a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42zM9.5 18A7.5 7.5 0 1 1 17 10.5A7.54 7.54 0 0 1 9.5 18z"/></svg>
-            <svg viewBox="0 0 24 24"><path d="M16 7V5a4 4 0 0 0-8 0v2H4v14h16V7zm-6-2a2 2 0 0 1 4 0v2h-4zm8 14H6V9h2v2h2V9h4v2h2V9h2z"/></svg>
+    <div id="view-feed" class="view-section">
+        <header class="header">
+            <div class="logo">SNKRS</div>
+            <div class="header-icons">
+                 <svg viewBox="0 0 24 24"><path d="M21.71 20.29L17 15.61A9.22 9.22 0 0 0 19 10.5A9.5 9.5 0 1 0 9.5 20a9.22 9.22 0 0 0 5.11-2l4.68 4.71a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42zM9.5 18A7.5 7.5 0 1 1 17 10.5A7.54 7.54 0 0 1 9.5 18z"/></svg>
+            </div>
+        </header>
+        <div id="main-view">
+            </div>
+    </div>
+
+    <div id="view-profile" class="view-section hidden" style="padding-top: var(--safe-top);">
+        <div class="profile-header">
+            <div class="p-pic"></div>
+            <div class="p-name">Member</div>
+            <div class="p-sub">Nike Member Since 2024</div>
         </div>
-    </header>
-
-    <main class="main-container">
-
-        <section id="tab-feed" class="tab-content active">
-            <div id="feed-list">
-                <div class="feed-card">
-                    <img src="image_0.png" alt="Truffle" class="feed-img" style="object-fit: cover; height: 350px; object-position: center 30%;">
-                    <div class="feed-info">
-                        <p class="feed-title">SHAI 001 Lux</p>
-                        <h2 class="feed-name">Truffle</h2>
-                        <button class="btn btn-dark" style="width: 100%;">Notify me</button>
-                    </div>
-                </div>
-                 <div class="feed-card">
-                    <div class="feed-info">
-                        <p class="feed-title">Women's Air Jordan 4</p>
-                        <h2 class="feed-name">Pale Ivory and Tough Red</h2>
-                        <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/350d5e7e-3073-4098-828f-276464660303/air-jordan-4-retro-womens-shoes-HlQk5b.png" alt="AJ4" class="feed-img">
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="tab-instock" class="tab-content">
-            <h1 style="margin-bottom: 20px;">In Stock</h1>
-            <div class="filter-bar">
-                <div class="filter-btn">All</div>
-                <div class="filter-btn">Men</div>
-                <div class="filter-btn">Women</div>
-                <div class="filter-btn">Nike</div>
-            </div>
-            <div class="grid-container">
-                <div class="grid-item">
-                    <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/5d051522-9083-4a47-9775-4836296b9606/jordan-4-retro-toddler-shoes-7F2711.png" alt="Shoe" class="grid-img">
-                    <div class="grid-info">
-                        <p class="grid-name">Toddler Jordan 4 Pale Ivory</p>
-                        <p class="grid-price">$90</p>
-                    </div>
-                </div>
-                <div class="grid-item">
-                    <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/350d5e7e-3073-4098-828f-276464660303/air-jordan-4-retro-womens-shoes-HlQk5b.png" alt="Shoe" class="grid-img">
-                    <div class="grid-info">
-                        <p class="grid-name">Women's Air Jordan 4 Retro</p>
-                        <p class="grid-price">$210</p>
-                    </div>
-                </div>
-                <div class="grid-item">
-                    <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/6e788685-210c-424c-b335-291253180640/diamond-turf-2-td-football-cleat-835552.png" alt="Shoe" class="grid-img">
-                    <div class="grid-info">
-                        <p class="grid-name">Diamond Turf 2 TD</p>
-                        <p class="grid-price">$210</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-         <section id="tab-upcoming" class="tab-content">
-            <h1 style="margin-bottom: 20px;">Upcoming Drops</h1>
-            <div class="date-header">Saturday, February 7</div>
-            <div class="drop-item">
-                <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/350d5e7e-3073-4098-828f-276464660303/air-jordan-4-retro-womens-shoes-HlQk5b.png" alt="AJ4" class="drop-img">
-                <div class="drop-info">
-                    <p>Women's Air Jordan 4</p>
-                    <p style="color:var(--sub-text)">Pale Ivory and Tough Red</p>
-                    <button class="btn btn-soldout" style="margin-top: 10px; width: fit-content; padding: 8px 16px;">Sold out</button>
-                </div>
-            </div>
-            <div class="drop-item">
-                <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/0e58576c-9190-4042-8c15-163031871429/jordan-4-retro-little-kids-shoes-395618.png" alt="AJ4 Kids" class="drop-img">
-                <div class="drop-info">
-                    <p>Little Kids' Shoes</p>
-                    <p style="color:var(--sub-text)">Jordan 4 Retro</p>
-                    <button class="btn btn-light" style="margin-top: 10px; width: fit-content; padding: 8px 16px;">Buy Now</button>
-                </div>
-            </div>
-
-            <div class="date-header">Tuesday, February 10</div>
-            <div class="drop-item">
-                <img src="https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/4f37f383-3056-4987-9323-605254848068/air-force-1-07-lx-womens-shoes-337341.png" alt="AF1" class="drop-img">
-                <div class="drop-info">
-                    <p style="color:var(--sub-text); font-size: 12px;">9:00 AM</p>
-                    <p>Air Force 1 Low</p>
-                    <p style="color:var(--sub-text)">Asparagus and Chlorophyll</p>
-                </div>
-            </div>
-        </section>
-
-
-        <section id="tab-maps" class="tab-content">
-            <div class="map-container">
-                <img src="image_3.png" alt="SNKRS Stash Map">
-            </div>
-        </section>
-
-
-        <section id="tab-profile" class="tab-content">
-            <div class="profile-header">
-                <div class="profile-pic"></div>
-                <p style="color: var(--sub-text); font-size: 14px;">Edit Picture</p>
-            </div>
-
-            <div style="margin-top: 30px;">
-                <div class="profile-menu-item">
-                    <span>Inbox</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-                </div>
-            </div>
-
-            <div style="margin-top: 30px; border-bottom: 1px solid #333; padding-bottom: 20px;">
-                <div class="profile-menu-item" style="border:none; padding: 5px 0;">
-                    <span style="color: var(--sub-text);">First Name</span>
-                    <span>Kenton</span>
-                </div>
-                <div class="profile-menu-item" style="border:none; padding: 5px 0;">
-                    <span style="color: var(--sub-text);">Last Name</span>
-                    <span>Wolf</span>
-                </div>
-            </div>
-
-             <div style="margin-top: 20px;">
-                <div class="profile-menu-item" id="open-settings-btn" style="cursor: pointer; color: var(--nike-red);">
-                    <span>Settings / Add a Shoe (SIMULATION)</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--nike-red)"><path d="M19.14 12.94c.04-.3.06-.61.06-.94c0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.09.16-.12.36.03.61l2.03 1.58c-.05.3-.09.63-.09.94c0 .31.04.63.09.94l-2.03 1.58a.49.49 0 0 0-.03.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.09-.47-.03-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6s3.6 1.62 3.6 3.6s-1.62 3.6-3.6 3.6z"/></svg>
-                </div>
-            </div>
-
-
-            <div class="member-card">
-                <div>
-                    <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg" fill="white"><path d="M21 8.719L7.836 14.303C6.74 14.768 5.818 15 5.075 15c-.836 0-1.445-.295-1.819-.884-.485-.76-.273-1.982.559-3.272.694-1.075 1.893-2.35 3.37-3.587L8.19 9.05C5.263 11.318 4.054 13.088 4.054 14.529c0 1.13.853 2.077 2.254 2.077 1.173 0 2.56-.486 4.027-1.108L23.292 9.294 21 8.719z"/></svg>
-                    <h2 style="margin-top: 10px;">Nike Member</h2>
-                    <p style="color: var(--sub-text);">Since 2021</p>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <nav class="bottom-nav">
-        <div class="nav-item active" data-target="tab-feed">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            <span>Feed</span>
+        <div class="menu-item">Inbox</div>
+        <div class="menu-item">Orders</div>
+        <div class="menu-item" onclick="openSettings()" style="cursor: pointer; color: var(--nike-red);">
+            Add Custom Drop
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--nike-red)"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
         </div>
-        <div class="nav-item" data-target="tab-instock">
-            <svg viewBox="0 0 24 24"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
-            <span>In Stock</span>
-        </div>
-        <div class="nav-item" data-target="tab-upcoming">
-             <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"/></svg>
-            <span>Upcoming</span>
-        </div>
-        <div class="nav-item" data-target="tab-maps">
-            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5a2.5 2.5 0 0 1 0 5z"/></svg>
-            <span>Maps</span>
-        </div>
-        <div class="nav-item" data-target="tab-profile">
-             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            <span>Profile</span>
-        </div>
-    </nav>
+    </div>
 
-
-    <div id="settings-modal">
-        <div class="settings-content">
-            <h2>Add the shoe you've always wanted</h2>
-            <p style="color: var(--sub-text); margin-bottom: 20px; font-size: 14px;">This will simulate getting the shoe and add it to the top of your feed.</p>
+    <div id="product-page">
+        <div class="prod-nav">
+            <div class="back-btn" onclick="closeProduct()">
+                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </div>
+            <div class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 12v-2h16v2H4z"/></svg> </div>
+        </div>
+        
+        <div class="prod-hero">
+            <img id="p-img" src="" alt="">
+        </div>
+        
+        <div class="prod-details">
+            <div class="prod-row">
+                <div class="prod-name" id="p-name">Shoe Name</div>
+                <div class="prod-price" id="p-price">$000</div>
+            </div>
+            <div class="prod-sub" id="p-sub">Category</div>
             
-            <div class="input-group">
-                <label for="shoeName">Shoe Name</label>
-                <input type="text" id="shoeName" placeholder="e.g., Air Jordan 1 'Chicago'">
+            <div class="prod-desc" id="p-desc">
+                Description goes here.
             </div>
-            <div class="input-group">
-                <label for="shoeImage">Image URL</label>
-                <input type="text" id="shoeImage" placeholder="Paste a direct image link here...">
+
+            <div class="size-grid">
+                <div class="size-opt">M 9</div>
+                <div class="size-opt">M 9.5</div>
+                <div class="size-opt selected">M 10</div>
+                <div class="size-opt">M 10.5</div>
+                <div class="size-opt">M 11</div>
+                <div class="size-opt">M 12</div>
             </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                 <button class="btn btn-dark" id="cancel-settings" style="flex:1; background:#555;">Cancel</button>
-                 <button class="btn btn-light" id="save-shoe-btn" style="flex:1;">GOT 'EM</button>
+        </div>
+
+        <div class="buy-bar">
+            <div class="buy-btn" id="buy-button" onclick="startPurchase()">$180.00</div>
+        </div>
+    </div>
+
+    <div id="processing-overlay" class="hidden">
+        <div class="spinner"></div>
+        <div class="process-text">Processing Payment...</div>
+        <div style="font-size: 12px; color: #aaa; margin-top: 10px;">Do not close the app</div>
+    </div>
+
+    <div id="got-em-overlay">
+        <div class="close-got-em" onclick="closeGotEm()">×</div>
+        <div class="got-em-text">GOT<br>'EM</div>
+        <img id="got-em-product-img" class="got-em-img" src="" alt="">
+        <div style="text-align: center;">
+            <div style="font-size: 18px; font-weight: 700; margin-bottom: 5px;" id="got-em-name">Shoe Name</div>
+            <div style="font-size: 14px; color: #aaa;">Your order is confirmed</div>
+        </div>
+        <div class="share-btn">Share</div>
+    </div>
+
+    <div id="settings-modal" class="hidden">
+        <div class="settings-box">
+            <h3>Add Custom Shoe</h3>
+            <input type="text" id="custom-name" placeholder="Shoe Name (e.g. Dior Jordan 1)">
+            <input type="text" id="custom-img" placeholder="Image URL">
+            <input type="text" id="custom-price" placeholder="Price (e.g. $2000)">
+            <div style="display:flex; gap:10px;">
+                <button class="btn" onclick="closeSettings()" style="flex:1; background:#444; color:white; padding:10px; border-radius:5px;">Cancel</button>
+                <button class="btn" onclick="saveCustomShoe()" style="flex:1; background:white; color:black; padding:10px; border-radius:5px;">Add</button>
             </div>
         </div>
     </div>
 
+    <nav class="tab-bar">
+        <div class="tab active" onclick="switchTab('feed', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>
+            Feed
+        </div>
+        <div class="tab" onclick="switchTab('instock', this)">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm2 4h12v2H6zm2 4h8v2H8z"/></svg>
+            In Stock
+        </div>
+        <div class="tab" onclick="switchTab('upcoming', this)">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+            Upcoming
+        </div>
+        <div class="tab" onclick="switchTab('profile', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Profile
+        </div>
+    </nav>
 
     <script>
-        // 1. Navigation Logic
-        const navItems = document.querySelectorAll('.nav-item');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                // Remove active class from all nav items and tabs
-                navItems.forEach(nav => nav.classList.remove('active'));
-                tabContents.forEach(tab => tab.classList.remove('active'));
-
-                // Add active class to clicked item and corresponding tab
-                item.classList.add('active');
-                const targetId = item.getAttribute('data-target');
-                document.getElementById(targetId).classList.add('active');
-
-                // Scroll back to top when switching tabs
-                document.querySelector('.main-container').scrollTop = 0;
-            });
-        });
-
-        // 2. "Add Shoe" Simulation Feature Logic
-
-        const settingsBtn = document.getElementById('open-settings-btn');
-        const settingsModal = document.getElementById('settings-modal');
-        const cancelBtn = document.getElementById('cancel-settings');
-        const saveBtn = document.getElementById('save-shoe-btn');
-        const feedList = document.getElementById('feed-list');
-
-        // Open Modal
-        settingsBtn.addEventListener('click', () => {
-            settingsModal.style.display = 'flex';
-        });
-
-        // Close Modal
-        cancelBtn.addEventListener('click', () => {
-            settingsModal.style.display = 'none';
-        });
-
-        // Save Shoe and "Get Em"
-        saveBtn.addEventListener('click', () => {
-            const name = document.getElementById('shoeName').value;
-            // Use a default placeholder if url is empty, otherwise use the input
-            const imgUrl = document.getElementById('shoeImage').value || 'https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/350d5e7e-3073-4098-828f-276464660303/air-jordan-4-retro-womens-shoes-HlQk5b.png';
-
-            if (!name) {
-                alert("Please enter a shoe name.");
-                return;
+        // --- DATA CATALOG ---
+        const catalog = [
+            {
+                id: 1,
+                name: "Air Jordan 1 'Chicago'",
+                sub: "Lost & Found",
+                price: "$180",
+                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/9a412850-84c4-4638-a16f-370597285516/air-jordan-1-2022-chicago-release-date.jpg",
+                desc: "The Air Jordan 1 'Chicago' brings back the classic varisty red, black and white colorway. With cracked leather and a pre-yellowed midsole, it tells the story of a lost pair found in a mom-and-pop shop."
+            },
+            {
+                id: 2,
+                name: "Air Jordan 1 High",
+                sub: "Dark Mocha",
+                price: "$170",
+                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/7c5691d5-7634-406b-a25b-0a56385d88d2/air-jordan-1-dark-mocha-release-date.jpg",
+                desc: "The Air Jordan 1 Dark Mocha features a Sail leather base with black leather overlays and Mocha suede on the heel and collar. A classic color blocking that recalls the 2019 Travis Scott AJ1."
+            },
+            {
+                id: 3,
+                name: "SHAI 001 Lux",
+                sub: "Truffle",
+                price: "$170",
+                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/e4f24823-380d-4050-8919-866403064601/shai-gilgeous-alexander-converse-collection-release-date.jpg",
+                desc: "Designed for elite performance and effortless style, the Shai 001 Lux channels the combined innovation of Converse and Nike. Its palette brings earthy warmth and understated depth."
+            },
+            {
+                id: 4,
+                name: "Off-White™ x AJ1",
+                sub: "UNC",
+                price: "$190",
+                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/pics-b1089200-c081-4547-a7f4-f3c50953a948/air-jordan-1-x-off-white-powder-blue-release-date.jpg",
+                desc: "Virgil Abloh continues his deconstructed design language with the Air Jordan 1 'UNC'. Featuring the signature red zip tie, text on the medial side, and floating swoosh."
+            },
+            {
+                id: 5,
+                name: "Travis Scott x AJ1",
+                sub: "Reverse Mocha",
+                price: "$150",
+                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/198f395d-d9b8-48b2-b430-8a424a25927c/air-jordan-1-low-x-travis-scott-sail-and-ridgerock-release-date.jpg",
+                desc: "La Flame returns with the Air Jordan 1 Low 'Reverse Mocha'. Featuring a backward Swoosh, Cactus Jack branding, and a neutral palette that is ready for everyday wear."
             }
+        ];
 
-            // 1. Create the new card HTML structure with "GOT 'EM" styling
-            const newCardHTML = `
-                <div class="feed-card got-em-card">
-                    <div class="got-em-header">GOT 'EM</div>
-                    <img src="${imgUrl}" alt="${name}" class="feed-img" style="object-fit: contain; background: #f5f5f5; height: 300px;">
-                    <div class="feed-info">
-                        <p class="feed-title" style="color: #ccc;">Purchased just now</p>
-                        <h2 class="feed-name">${name}</h2>
-                        <button class="btn btn-light" style="width: 100%;">View Order</button>
+        let currentShoe = null;
+
+        // --- APP LOGIC ---
+
+        function renderFeed() {
+            const container = document.getElementById('main-view');
+            container.innerHTML = '';
+            
+            catalog.forEach(shoe => {
+                const card = document.createElement('div');
+                card.className = 'feed-card';
+                card.onclick = () => openProduct(shoe);
+                card.innerHTML = `
+                    <img src="${shoe.img}" class="feed-img">
+                    <div class="feed-overlay">
+                        <div class="feed-sub">${shoe.sub}</div>
+                        <div class="feed-title">${shoe.name}</div>
+                        <div class="feed-btn">Shop</div>
                     </div>
-                </div>
-            `;
+                `;
+                container.appendChild(card);
+            });
+            // Add padding at bottom
+            const pad = document.createElement('div');
+            pad.style.height = "100px";
+            container.appendChild(pad);
+        }
 
-            // 2. Insert the new card at the beginning of the Feed list
-            feedList.insertAdjacentHTML('afterbegin', newCardHTML);
+        function openProduct(shoe) {
+            currentShoe = shoe;
+            document.getElementById('p-img').src = shoe.img;
+            document.getElementById('p-name').innerText = shoe.name;
+            document.getElementById('p-price').innerText = shoe.price;
+            document.getElementById('p-sub').innerText = shoe.sub;
+            document.getElementById('p-desc').innerText = shoe.desc;
+            document.getElementById('buy-button').innerText = shoe.price; // Set price in button
+            
+            document.getElementById('product-page').classList.add('active');
+        }
 
-            // 3. Close modal and reset inputs
-            settingsModal.style.display = 'none';
-            document.getElementById('shoeName').value = '';
-            document.getElementById('shoeImage').value = '';
+        function closeProduct() {
+            document.getElementById('product-page').classList.remove('active');
+        }
 
-            // 4. Switch automatically back to the Feed tab to show the result
-            document.querySelector('[data-target="tab-feed"]').click();
-        });
+        function startPurchase() {
+            // 1. Show processing
+            const processing = document.getElementById('processing-overlay');
+            processing.classList.remove('hidden');
 
-        // Prevent scrolling the body outside the main container on iOS
-        document.body.addEventListener('touchmove', function(e) {
-            if (!e.target.closest('.main-container')) {
-                e.preventDefault();
+            // 2. Wait Random time (3-6 seconds)
+            const waitTime = Math.floor(Math.random() * 3000) + 3000;
+
+            setTimeout(() => {
+                // 3. Hide processing, show Got Em
+                processing.classList.add('hidden');
+                showGotEm();
+            }, waitTime);
+        }
+
+        function showGotEm() {
+            const overlay = document.getElementById('got-em-overlay');
+            document.getElementById('got-em-product-img').src = currentShoe.img;
+            document.getElementById('got-em-name').innerText = currentShoe.name;
+            overlay.classList.add('active');
+        }
+
+        function closeGotEm() {
+            document.getElementById('got-em-overlay').classList.remove('active');
+            closeProduct();
+        }
+
+        // --- TABS & NAVIGATION ---
+        function switchTab(tabName, el) {
+            // UI Update
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+
+            // View Update
+            if (tabName === 'feed') {
+                document.getElementById('view-feed').classList.remove('hidden');
+                document.getElementById('view-profile').classList.add('hidden');
+            } else if (tabName === 'profile') {
+                document.getElementById('view-feed').classList.add('hidden');
+                document.getElementById('view-profile').classList.remove('hidden');
+            } else {
+                // Placeholder for other tabs
+                document.getElementById('view-feed').classList.add('hidden');
+                document.getElementById('view-profile').classList.add('hidden');
             }
-        }, { passive: false });
+        }
+
+        // --- CUSTOM SETTINGS LOGIC ---
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function saveCustomShoe() {
+            const name = document.getElementById('custom-name').value;
+            const img = document.getElementById('custom-img').value;
+            const price = document.getElementById('custom-price').value;
+
+            if(name && img) {
+                const newShoe = {
+                    id: Date.now(),
+                    name: name,
+                    sub: "Custom Drop",
+                    price: price || "$0.00",
+                    img: img,
+                    desc: "Exclusive custom drop added via settings."
+                };
+                catalog.unshift(newShoe); // Add to top
+                renderFeed();
+                closeSettings();
+                
+                // Reset fields
+                document.getElementById('custom-name').value = '';
+                document.getElementById('custom-img').value = '';
+                document.getElementById('custom-price').value = '';
+
+                // Switch to feed
+                const feedTab = document.querySelector('.tab'); // first tab is feed
+                switchTab('feed', feedTab);
+            }
+        }
+
+        // --- INIT ---
+        renderFeed();
+
     </script>
 </body>
 </html>
