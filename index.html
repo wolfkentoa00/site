@@ -17,87 +17,121 @@
             --safe-bottom: env(safe-area-inset-bottom);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         
-        /* UTILS */
-        .hidden { display: none !important; }
-        .btn { border: none; outline: none; font-weight: 700; cursor: pointer; }
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            height: 100vh; 
+            width: 100vw;
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column;
+            touch-action: pan-y; /* Prevents bounce */
+        }
         
-        /* VIEWS CONTAINER */
-        #main-view { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; padding-bottom: calc(60px + var(--safe-bottom)); }
+        /* SCROLLABLE VIEW CONTAINER */
+        #main-view { 
+            flex: 1; 
+            overflow-y: scroll; 
+            overflow-x: hidden; 
+            padding-bottom: calc(80px + var(--safe-bottom)); 
+            -webkit-overflow-scrolling: touch;
+        }
 
         /* HEADER */
-        .header { padding: calc(var(--safe-top) + 10px) 20px 10px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); z-index: 50; position: sticky; top: 0;}
+        .header { 
+            padding: calc(var(--safe-top) + 10px) 20px 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: rgba(17,17,17,0.95); 
+            backdrop-filter: blur(10px);
+            z-index: 50; 
+            position: sticky; 
+            top: 0;
+        }
         .logo { color: var(--nike-red); font-weight: 900; font-size: 24px; letter-spacing: -1px; font-style: italic; }
         .header-icons svg { width: 26px; height: 26px; fill: white; margin-left: 15px; }
 
         /* FEED (HOME) */
-        .feed-card { margin-bottom: 2px; position: relative; cursor: pointer; }
-        .feed-img { width: 100%; height: 450px; object-fit: cover; display: block; }
-        .feed-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
-        .feed-sub { font-size: 14px; color: #ddd; margin-bottom: 4px; }
-        .feed-title { font-size: 28px; font-weight: 800; text-transform: uppercase; line-height: 1; margin-bottom: 10px; }
-        .feed-btn { background: white; color: black; padding: 10px 25px; border-radius: 20px; font-size: 14px; display: inline-block; }
+        .feed-card { margin-bottom: 2px; position: relative; cursor: pointer; background: white; height: 450px; overflow: hidden;}
+        .feed-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s;}
+        .feed-card:active .feed-img { transform: scale(0.98); }
+        
+        .feed-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 25px; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%); pointer-events: none;}
+        .feed-sub { font-size: 15px; color: #f0f0f0; margin-bottom: 4px; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.5);}
+        .feed-title { font-size: 32px; font-weight: 800; text-transform: uppercase; line-height: 0.9; margin-bottom: 15px; text-shadow: 0 1px 5px rgba(0,0,0,0.5);}
+        .feed-btn { background: white; color: black; padding: 12px 28px; border-radius: 30px; font-size: 15px; display: inline-block; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,0.3); pointer-events: auto;}
 
         /* PRODUCT PAGE */
-        #product-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; overflow-y: auto; padding-bottom: 100px; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        #product-page { position: fixed; inset: 0; background: var(--bg-color); z-index: 100; overflow-y: auto; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column;}
         #product-page.active { transform: translateX(0); }
         
-        .prod-nav { position: absolute; top: var(--safe-top); left: 0; width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; z-index: 101; }
-        .back-btn { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .prod-nav { position: absolute; top: var(--safe-top); left: 0; width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; z-index: 101; pointer-events: none;}
+        .back-btn { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); pointer-events: auto; cursor: pointer;}
         
+        .prod-content { flex: 1; overflow-y: auto; padding-bottom: 120px; }
         .prod-hero { width: 100%; height: 50vh; background: #f6f6f6; display: flex; align-items: center; justify-content: center; position: relative; }
-        .prod-hero img { width: 90%; height: auto; mix-blend-mode: multiply; }
+        .prod-hero img { width: 90%; height: auto; mix-blend-mode: multiply; max-height: 400px; object-fit: contain; }
         
         .prod-details { padding: 20px; }
         .prod-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
         .prod-name { font-size: 24px; font-weight: 700; width: 70%; line-height: 1.1; }
         .prod-price { font-size: 18px; font-weight: 500; }
-        .prod-sub { color: var(--sub-text); font-size: 14px; margin-bottom: 20px; }
+        .prod-sub { color: var(--sub-text); font-size: 14px; margin-bottom: 25px; }
         .prod-desc { color: #ccc; font-size: 15px; line-height: 1.5; margin-bottom: 30px; }
         
         .size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
-        .size-opt { padding: 15px; border: 1px solid #333; border-radius: 8px; text-align: center; color: white; font-weight: 600; }
+        .size-opt { padding: 15px; border: 1px solid #333; border-radius: 8px; text-align: center; color: white; font-weight: 600; font-size: 14px; transition: 0.2s;}
         .size-opt.selected { border-color: white; background: #333; }
+        .size-opt:active { transform: scale(0.95); }
 
         .buy-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px calc(15px + var(--safe-bottom)); background: var(--bg-color); border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; z-index: 102; }
-        .buy-btn { flex: 1; background: white; color: black; padding: 16px; border-radius: 30px; font-size: 16px; text-align: center; font-weight: 700; }
+        .buy-btn { flex: 1; background: white; color: black; padding: 18px; border-radius: 30px; font-size: 16px; text-align: center; font-weight: 700; transition: background 0.2s; box-shadow: 0 0 15px rgba(255,255,255,0.1);}
+        .buy-btn.disabled { background: #555; color: #888; pointer-events: none; }
 
-        /* PROCESSING OVERLAY */
-        #processing-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
+        /* PROCESSING & GOT EM OVERLAY */
+        #fullscreen-overlay { position: fixed; inset: 0; background: #111; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+        #fullscreen-overlay.active { opacity: 1; pointer-events: auto; }
+
+        /* States for Overlay */
+        .overlay-content { text-align: center; width: 100%; display: none; }
+        .overlay-content.visible { display: flex; flex-direction: column; align-items: center; }
+
+        /* Spinner */
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .process-text { font-weight: 600; font-size: 16px; letter-spacing: 0.5px; }
-
-        /* GOT 'EM OVERLAY */
-        #got-em-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 300; display: flex; flex-direction: column; align-items: center; padding-top: 15vh; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
-        #got-em-overlay.active { opacity: 1; pointer-events: auto; }
         
-        .got-em-text { font-family: 'Impact', sans-serif; font-size: 120px; text-transform: uppercase; line-height: 0.85; text-align: center; color: #e5e5e5; margin-bottom: 20px; letter-spacing: -2px; transform: scaleY(1.1); }
-        .got-em-img { width: 90%; max-width: 400px; height: auto; margin-bottom: 40px; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5)); transform: rotate(-5deg); }
-        .share-btn { background: white; color: black; width: 80%; padding: 18px; border-radius: 30px; font-weight: 700; font-size: 16px; margin-top: auto; margin-bottom: calc(50px + var(--safe-bottom)); text-align: center;}
-        .close-got-em { position: absolute; top: calc(var(--safe-top) + 15px); right: 20px; width: 36px; height: 36px; background: #333; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+        /* Got Em Specifics */
+        .got-em-text { font-family: 'Impact', sans-serif; font-size: clamp(80px, 20vw, 130px); text-transform: uppercase; line-height: 0.85; text-align: center; color: #e5e5e5; margin-bottom: 20px; letter-spacing: -2px; transform: scaleY(1.1); margin-top: -50px; opacity: 0; transform: scaleY(1.1) translateY(20px); transition: all 0.6s ease-out;}
+        .got-em-text.animate { opacity: 1; transform: scaleY(1.1) translateY(0); }
+
+        .got-em-img-container { width: 100%; height: 40vh; display: flex; align-items: center; justify-content: center; position: relative; }
+        .got-em-img { width: 85%; max-width: 400px; height: auto; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6)); opacity: 0; transform: scale(0.9); transition: all 0.6s ease-out 0.3s; }
+        .got-em-img.animate { opacity: 1; transform: scale(1) rotate(-5deg); }
+
+        .got-em-details { opacity: 0; transition: opacity 1s ease 1s; margin-top: 20px;}
+        .got-em-details.animate { opacity: 1; }
+
+        .share-btn { background: white; color: black; width: 80%; max-width: 300px; padding: 18px; border-radius: 30px; font-weight: 700; font-size: 16px; position: absolute; bottom: calc(50px + var(--safe-bottom)); }
+        .close-overlay { position: absolute; top: calc(var(--safe-top) + 20px); right: 25px; width: 30px; height: 30px; color: white; font-size: 30px; cursor: pointer; line-height: 30px; text-align: center; }
 
         /* TAB BAR */
-        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(60px + var(--safe-bottom)); background: var(--bg-color); border-top: 1px solid #222; display: flex; justify-content: space-around; padding-top: 10px; padding-bottom: var(--safe-bottom); z-index: 90; }
-        .tab { display: flex; flex-direction: column; align-items: center; color: #666; font-size: 10px; font-weight: 600; }
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(55px + var(--safe-bottom)); background: var(--bg-color); border-top: 1px solid #222; display: flex; justify-content: space-around; padding-top: 8px; padding-bottom: var(--safe-bottom); z-index: 90; }
+        .tab { display: flex; flex-direction: column; align-items: center; color: #666; font-size: 10px; font-weight: 600; width: 20%;}
         .tab.active { color: white; }
         .tab svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
 
         /* SETTINGS MODAL */
-        #settings-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .settings-box { background: #222; padding: 25px; border-radius: 20px; width: 100%; max-width: 350px; }
-        .settings-box input { width: 100%; padding: 12px; background: #333; border: none; color: white; margin-bottom: 15px; border-radius: 8px; }
-        .settings-box h3 { margin-bottom: 15px; text-align: center; }
+        #settings-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        #settings-modal.active { opacity: 1; pointer-events: auto; }
+        .settings-box { background: #222; padding: 25px; border-radius: 20px; width: 100%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .settings-box input { width: 100%; padding: 14px; background: #333; border: 1px solid #444; color: white; margin-bottom: 15px; border-radius: 10px; font-size: 16px;}
+        .settings-box h3 { margin-bottom: 20px; text-align: center; font-size: 18px;}
 
-        /* PROFILE VIEW */
-        .profile-header { padding: 40px 20px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid #222; }
-        .p-pic { width: 80px; height: 80px; background: #333; border-radius: 50%; margin-bottom: 15px; background-image: url('https://static.nike.com/a/images/f_auto/dpr_3.0,cs_srgb/w_300,c_limit/3e09848c-ac70-449e-953e-52622f975440/nike-just-do-it.jpg'); background-size: cover;}
-        .p-name { font-size: 20px; font-weight: 700; margin-bottom: 5px; }
-        .p-sub { color: #666; font-size: 14px; }
-        .menu-item { padding: 20px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
-
+        /* UTILS */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -113,85 +147,104 @@
             </div>
     </div>
 
-    <div id="view-profile" class="view-section hidden" style="padding-top: var(--safe-top);">
-        <div class="profile-header">
-            <div class="p-pic"></div>
-            <div class="p-name">Member</div>
-            <div class="p-sub">Nike Member Since 2024</div>
-        </div>
-        <div class="menu-item">Inbox</div>
-        <div class="menu-item">Orders</div>
-        <div class="menu-item" onclick="openSettings()" style="cursor: pointer; color: var(--nike-red);">
-            Add Custom Drop
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--nike-red)"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-        </div>
-    </div>
-
     <div id="product-page">
         <div class="prod-nav">
             <div class="back-btn" onclick="closeProduct()">
                 <svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
             </div>
-            <div class="back-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 12v-2h16v2H4z"/></svg> </div>
         </div>
         
-        <div class="prod-hero">
-            <img id="p-img" src="" alt="">
-        </div>
-        
-        <div class="prod-details">
-            <div class="prod-row">
-                <div class="prod-name" id="p-name">Shoe Name</div>
-                <div class="prod-price" id="p-price">$000</div>
+        <div class="prod-content">
+            <div class="prod-hero">
+                <img id="p-img" src="" alt="Shoe Image" onerror="this.src='https://via.placeholder.com/400x400/333/fff?text=No+Image'">
             </div>
-            <div class="prod-sub" id="p-sub">Category</div>
             
-            <div class="prod-desc" id="p-desc">
-                Description goes here.
-            </div>
+            <div class="prod-details">
+                <div class="prod-row">
+                    <div class="prod-name" id="p-name">Shoe Name</div>
+                    <div class="prod-price" id="p-price">$000</div>
+                </div>
+                <div class="prod-sub" id="p-sub">Category</div>
+                
+                <div class="prod-desc" id="p-desc">
+                    Description...
+                </div>
 
-            <div class="size-grid">
-                <div class="size-opt">M 9</div>
-                <div class="size-opt">M 9.5</div>
-                <div class="size-opt selected">M 10</div>
-                <div class="size-opt">M 10.5</div>
-                <div class="size-opt">M 11</div>
-                <div class="size-opt">M 12</div>
+                <div class="size-grid">
+                    <div class="size-opt" onclick="selectSize(this)">M 7</div>
+                    <div class="size-opt" onclick="selectSize(this)">M 8</div>
+                    <div class="size-opt" onclick="selectSize(this)">M 8.5</div>
+                    <div class="size-opt" onclick="selectSize(this)">M 9</div>
+                    <div class="size-opt selected" onclick="selectSize(this)">M 10</div>
+                    <div class="size-opt" onclick="selectSize(this)">M 10.5</div>
+                    <div class="size-opt" onclick="selectSize(this)">M 11</div>
+                    <div class="size-opt" onclick="selectSize(this)">M 12</div>
+                    <div class="size-opt" onclick="selectSize(this)">M 13</div>
+                </div>
             </div>
         </div>
 
         <div class="buy-bar">
-            <div class="buy-btn" id="buy-button" onclick="startPurchase()">$180.00</div>
+            <div class="buy-btn" id="buy-button" onclick="startPurchaseFlow()">$180.00</div>
         </div>
     </div>
 
-    <div id="processing-overlay" class="hidden">
-        <div class="spinner"></div>
-        <div class="process-text">Processing Payment...</div>
-        <div style="font-size: 12px; color: #aaa; margin-top: 10px;">Do not close the app</div>
-    </div>
+    <div id="fullscreen-overlay">
+        <div class="close-overlay" onclick="closeGotEm()">×</div>
 
-    <div id="got-em-overlay">
-        <div class="close-got-em" onclick="closeGotEm()">×</div>
-        <div class="got-em-text">GOT<br>'EM</div>
-        <img id="got-em-product-img" class="got-em-img" src="" alt="">
-        <div style="text-align: center;">
-            <div style="font-size: 18px; font-weight: 700; margin-bottom: 5px;" id="got-em-name">Shoe Name</div>
-            <div style="font-size: 14px; color: #aaa;">Your order is confirmed</div>
+        <div id="state-spinner" class="overlay-content">
+            <div class="spinner"></div>
+            <div style="font-weight: 600; font-size: 16px;">Processing Payment...</div>
+            <div style="font-size: 12px; color: #888; margin-top: 10px;">Do not close the app</div>
         </div>
-        <div class="share-btn">Share</div>
+
+        <div id="state-queue" class="overlay-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">⏳</div>
+            <div style="font-weight: 700; font-size: 20px; margin-bottom: 5px;">You're in line</div>
+            <div style="font-size: 14px; color: #aaa; width: 80%;">We're checking our inventory. Please wait...</div>
+        </div>
+
+        <div id="state-got-em" class="overlay-content" style="width: 100%; height: 100%; justify-content: flex-start; padding-top: 15vh;">
+            <div class="got-em-text" id="got-em-text">GOT<br>'EM</div>
+            <div class="got-em-img-container">
+                <img id="got-em-img" class="got-em-img" src="" alt="">
+            </div>
+            <div class="got-em-details" id="got-em-details">
+                <div style="font-size: 20px; font-weight: 800; margin-bottom: 5px;" id="got-em-name">Shoe Name</div>
+                <div style="font-size: 15px; color: #bbb;">Your order is confirmed</div>
+            </div>
+            <div class="share-btn">Share</div>
+        </div>
     </div>
 
-    <div id="settings-modal" class="hidden">
+    <div id="view-profile" class="view-section hidden" style="padding-top: var(--safe-top);">
+        <div style="padding: 40px 20px; text-align: center; border-bottom: 1px solid #222;">
+            <div style="width: 90px; height: 90px; background: #333; border-radius: 50%; margin: 0 auto 15px; overflow: hidden;">
+                <svg viewBox="0 0 24 24" fill="#666" style="width:100%; height:100%;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <h2 style="margin-bottom: 5px;">Member</h2>
+            <p style="color: #666; font-size: 13px;">Nike Member Since 2021</p>
+        </div>
+        
+        <div style="padding: 20px; border-bottom: 1px solid #222;">Inbox</div>
+        <div style="padding: 20px; border-bottom: 1px solid #222;">Orders</div>
+        
+        <div onclick="openSettings()" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--nike-red);">
+            <span style="font-weight: 600;">Add Custom Shoe (Fix Broken Images)</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94c0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.09.16-.12.36.03.61l2.03 1.58c-.05.3-.09.63-.09.94c0 .31.04.63.09.94l-2.03 1.58a.49.49 0 0 0-.03.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.09-.47-.03-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6s3.6 1.62 3.6 3.6s-1.62 3.6-3.6 3.6z"/></svg>
+        </div>
+    </div>
+
+    <div id="settings-modal">
         <div class="settings-box">
-            <h3>Add Custom Shoe</h3>
-            <input type="text" id="custom-name" placeholder="Shoe Name (e.g. Dior Jordan 1)">
+            <h3>Add Shoe to Catalog</h3>
+            <p style="color:#888; font-size:12px; margin-bottom:15px; text-align:center;">Paste a URL ending in .jpg or .png</p>
+            <input type="text" id="custom-name" placeholder="Shoe Name (e.g. Chicago 1s)">
             <input type="text" id="custom-img" placeholder="Image URL">
-            <input type="text" id="custom-price" placeholder="Price (e.g. $2000)">
+            <input type="text" id="custom-price" placeholder="Price (e.g. $180.00)">
             <div style="display:flex; gap:10px;">
-                <button class="btn" onclick="closeSettings()" style="flex:1; background:#444; color:white; padding:10px; border-radius:5px;">Cancel</button>
-                <button class="btn" onclick="saveCustomShoe()" style="flex:1; background:white; color:black; padding:10px; border-radius:5px;">Add</button>
+                <button onclick="closeSettings()" style="flex:1; background:#444; color:white; padding:12px; border:none; border-radius:10px;">Cancel</button>
+                <button onclick="saveCustomShoe()" style="flex:1; background:white; color:black; padding:12px; border:none; border-radius:10px; font-weight:bold;">Add Shoe</button>
             </div>
         </div>
     </div>
@@ -217,52 +270,37 @@
 
     <script>
         // --- DATA CATALOG ---
+        // Using Wikipedia/Commons or reliable static placeholders to prevent broken images.
+        // User is encouraged to add their own via settings.
         const catalog = [
             {
                 id: 1,
                 name: "Air Jordan 1 'Chicago'",
                 sub: "Lost & Found",
-                price: "$180",
-                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/9a412850-84c4-4638-a16f-370597285516/air-jordan-1-2022-chicago-release-date.jpg",
-                desc: "The Air Jordan 1 'Chicago' brings back the classic varisty red, black and white colorway. With cracked leather and a pre-yellowed midsole, it tells the story of a lost pair found in a mom-and-pop shop."
+                price: "$180.00",
+                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Air_Jordan_1_High_The_Return_Chicago.jpg/640px-Air_Jordan_1_High_The_Return_Chicago.jpg", 
+                desc: "The Air Jordan 1 'Chicago' brings back the classic varsity red, black and white colorway. With cracked leather and a pre-yellowed midsole, it tells the story of a lost pair found in a mom-and-pop shop."
             },
             {
                 id: 2,
-                name: "Air Jordan 1 High",
+                name: "Air Jordan 1 'Mocha'",
                 sub: "Dark Mocha",
-                price: "$170",
-                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/7c5691d5-7634-406b-a25b-0a56385d88d2/air-jordan-1-dark-mocha-release-date.jpg",
-                desc: "The Air Jordan 1 Dark Mocha features a Sail leather base with black leather overlays and Mocha suede on the heel and collar. A classic color blocking that recalls the 2019 Travis Scott AJ1."
+                price: "$170.00",
+                // Fallback placeholder because specific sneaker images often 403
+                img: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80", 
+                desc: "The Air Jordan 1 Dark Mocha features a Sail leather base with black leather overlays and Mocha suede on the heel and collar."
             },
             {
                 id: 3,
-                name: "SHAI 001 Lux",
-                sub: "Truffle",
-                price: "$170",
-                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/e4f24823-380d-4050-8919-866403064601/shai-gilgeous-alexander-converse-collection-release-date.jpg",
-                desc: "Designed for elite performance and effortless style, the Shai 001 Lux channels the combined innovation of Converse and Nike. Its palette brings earthy warmth and understated depth."
-            },
-            {
-                id: 4,
                 name: "Off-White™ x AJ1",
                 sub: "UNC",
-                price: "$190",
-                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/pics-b1089200-c081-4547-a7f4-f3c50953a948/air-jordan-1-x-off-white-powder-blue-release-date.jpg",
-                desc: "Virgil Abloh continues his deconstructed design language with the Air Jordan 1 'UNC'. Featuring the signature red zip tie, text on the medial side, and floating swoosh."
-            },
-            {
-                id: 5,
-                name: "Travis Scott x AJ1",
-                sub: "Reverse Mocha",
-                price: "$150",
-                img: "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/198f395d-d9b8-48b2-b430-8a424a25927c/air-jordan-1-low-x-travis-scott-sail-and-ridgerock-release-date.jpg",
-                desc: "La Flame returns with the Air Jordan 1 Low 'Reverse Mocha'. Featuring a backward Swoosh, Cactus Jack branding, and a neutral palette that is ready for everyday wear."
+                price: "$190.00",
+                img: "https://images.unsplash.com/photo-1516478177764-9fe5bd7e9717?auto=format&fit=crop&w=800&q=80",
+                desc: "Virgil Abloh continues his deconstructed design language with the Air Jordan 1 'UNC'. Featuring the signature red zip tie."
             }
         ];
 
         let currentShoe = null;
-
-        // --- APP LOGIC ---
 
         function renderFeed() {
             const container = document.getElementById('main-view');
@@ -273,7 +311,7 @@
                 card.className = 'feed-card';
                 card.onclick = () => openProduct(shoe);
                 card.innerHTML = `
-                    <img src="${shoe.img}" class="feed-img">
+                    <img src="${shoe.img}" class="feed-img" onerror="this.src='https://via.placeholder.com/400?text=Image+Blocked'">
                     <div class="feed-overlay">
                         <div class="feed-sub">${shoe.sub}</div>
                         <div class="feed-title">${shoe.name}</div>
@@ -282,9 +320,9 @@
                 `;
                 container.appendChild(card);
             });
-            // Add padding at bottom
+            // Spacer
             const pad = document.createElement('div');
-            pad.style.height = "100px";
+            pad.style.height = "50px";
             container.appendChild(pad);
         }
 
@@ -295,8 +333,7 @@
             document.getElementById('p-price').innerText = shoe.price;
             document.getElementById('p-sub').innerText = shoe.sub;
             document.getElementById('p-desc').innerText = shoe.desc;
-            document.getElementById('buy-button').innerText = shoe.price; // Set price in button
-            
+            document.getElementById('buy-button').innerText = shoe.price;
             document.getElementById('product-page').classList.add('active');
         }
 
@@ -304,61 +341,62 @@
             document.getElementById('product-page').classList.remove('active');
         }
 
-        function startPurchase() {
-            // 1. Show processing
-            const processing = document.getElementById('processing-overlay');
-            processing.classList.remove('hidden');
+        function selectSize(el) {
+            document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+        }
 
-            // 2. Wait Random time (3-6 seconds)
-            const waitTime = Math.floor(Math.random() * 3000) + 3000;
+        // --- PURCHASE FLOW ---
+        function startPurchaseFlow() {
+            // 1. Show Overlay
+            const overlay = document.getElementById('fullscreen-overlay');
+            overlay.classList.add('active');
+            
+            // 2. Show Spinner
+            showOverlayState('state-spinner');
 
+            // 3. WAIT: Transition to Queue after 2 seconds
             setTimeout(() => {
-                // 3. Hide processing, show Got Em
-                processing.classList.add('hidden');
+                showOverlayState('state-queue');
+            }, 2000);
+
+            // 4. WAIT: Transition to Got Em after 4 more seconds
+            setTimeout(() => {
                 showGotEm();
-            }, waitTime);
+            }, 6000);
+        }
+
+        function showOverlayState(stateId) {
+            document.querySelectorAll('.overlay-content').forEach(el => el.classList.remove('visible'));
+            document.getElementById(stateId).classList.add('visible');
         }
 
         function showGotEm() {
-            const overlay = document.getElementById('got-em-overlay');
-            document.getElementById('got-em-product-img').src = currentShoe.img;
+            showOverlayState('state-got-em');
+            
+            document.getElementById('got-em-img').src = currentShoe.img;
             document.getElementById('got-em-name').innerText = currentShoe.name;
-            overlay.classList.add('active');
+
+            // Trigger animations
+            setTimeout(() => document.getElementById('got-em-text').classList.add('animate'), 100);
+            setTimeout(() => document.getElementById('got-em-img').classList.add('animate'), 300);
+            setTimeout(() => document.getElementById('got-em-details').classList.add('animate'), 800);
         }
 
         function closeGotEm() {
-            document.getElementById('got-em-overlay').classList.remove('active');
+            document.getElementById('fullscreen-overlay').classList.remove('active');
+            
+            // Reset Animations
+            document.getElementById('got-em-text').classList.remove('animate');
+            document.getElementById('got-em-img').classList.remove('animate');
+            document.getElementById('got-em-details').classList.remove('animate');
+            
             closeProduct();
         }
 
-        // --- TABS & NAVIGATION ---
-        function switchTab(tabName, el) {
-            // UI Update
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-
-            // View Update
-            if (tabName === 'feed') {
-                document.getElementById('view-feed').classList.remove('hidden');
-                document.getElementById('view-profile').classList.add('hidden');
-            } else if (tabName === 'profile') {
-                document.getElementById('view-feed').classList.add('hidden');
-                document.getElementById('view-profile').classList.remove('hidden');
-            } else {
-                // Placeholder for other tabs
-                document.getElementById('view-feed').classList.add('hidden');
-                document.getElementById('view-profile').classList.add('hidden');
-            }
-        }
-
-        // --- CUSTOM SETTINGS LOGIC ---
-        function openSettings() {
-            document.getElementById('settings-modal').classList.remove('hidden');
-        }
-
-        function closeSettings() {
-            document.getElementById('settings-modal').classList.add('hidden');
-        }
+        // --- CUSTOM SETTINGS ---
+        function openSettings() { document.getElementById('settings-modal').classList.add('active'); }
+        function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
 
         function saveCustomShoe() {
             const name = document.getElementById('custom-name').value;
@@ -369,27 +407,38 @@
                 const newShoe = {
                     id: Date.now(),
                     name: name,
-                    sub: "Custom Drop",
-                    price: price || "$0.00",
+                    sub: "Exclusive Access",
+                    price: price || "$180.00",
                     img: img,
-                    desc: "Exclusive custom drop added via settings."
+                    desc: "This is a custom drop added from your settings."
                 };
                 catalog.unshift(newShoe); // Add to top
                 renderFeed();
                 closeSettings();
                 
-                // Reset fields
-                document.getElementById('custom-name').value = '';
-                document.getElementById('custom-img').value = '';
-                document.getElementById('custom-price').value = '';
-
                 // Switch to feed
-                const feedTab = document.querySelector('.tab'); // first tab is feed
-                switchTab('feed', feedTab);
+                switchTab('feed', document.querySelectorAll('.tab')[0]);
             }
         }
 
-        // --- INIT ---
+        // --- TABS ---
+        function switchTab(tabName, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+
+            if (tabName === 'feed') {
+                document.getElementById('view-feed').classList.remove('hidden');
+                document.getElementById('view-profile').classList.add('hidden');
+            } else if (tabName === 'profile') {
+                document.getElementById('view-feed').classList.add('hidden');
+                document.getElementById('view-profile').classList.remove('hidden');
+            } else {
+                document.getElementById('view-feed').classList.add('hidden');
+                document.getElementById('view-profile').classList.add('hidden');
+            }
+        }
+
+        // Init
         renderFeed();
 
     </script>
