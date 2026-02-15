@@ -1,446 +1,200 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SNKRS</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>GPX Run Generator</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    
     <style>
-        :root {
-            --bg-color: #111111;
-            --card-bg: #1c1c1c;
-            --text-color: #ffffff;
-            --sub-text: #b0b0b0;
-            --nike-red: #fa1e32;
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        
+        /* Floating Control Panel */
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 300px;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
-        
-        body { 
-            background-color: var(--bg-color); 
-            color: var(--text-color); 
-            height: 100vh; 
-            width: 100vw;
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column;
-            touch-action: pan-y; /* Prevents bounce */
+        h2 { margin-top: 0; font-size: 18px; color: #333; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-        
-        /* SCROLLABLE VIEW CONTAINER */
-        #main-view { 
-            flex: 1; 
-            overflow-y: scroll; 
-            overflow-x: hidden; 
-            padding-bottom: calc(80px + var(--safe-bottom)); 
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* HEADER */
-        .header { 
-            padding: calc(var(--safe-top) + 10px) 20px 10px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: rgba(17,17,17,0.95); 
-            backdrop-filter: blur(10px);
-            z-index: 50; 
-            position: sticky; 
-            top: 0;
-        }
-        .logo { color: var(--nike-red); font-weight: 900; font-size: 24px; letter-spacing: -1px; font-style: italic; }
-        .header-icons svg { width: 26px; height: 26px; fill: white; margin-left: 15px; }
-
-        /* FEED (HOME) */
-        .feed-card { margin-bottom: 2px; position: relative; cursor: pointer; background: white; height: 450px; overflow: hidden;}
-        .feed-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s;}
-        .feed-card:active .feed-img { transform: scale(0.98); }
-        
-        .feed-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 25px; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%); pointer-events: none;}
-        .feed-sub { font-size: 15px; color: #f0f0f0; margin-bottom: 4px; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.5);}
-        .feed-title { font-size: 32px; font-weight: 800; text-transform: uppercase; line-height: 0.9; margin-bottom: 15px; text-shadow: 0 1px 5px rgba(0,0,0,0.5);}
-        .feed-btn { background: white; color: black; padding: 12px 28px; border-radius: 30px; font-size: 15px; display: inline-block; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,0.3); pointer-events: auto;}
-
-        /* PRODUCT PAGE */
-        #product-page { position: fixed; inset: 0; background: var(--bg-color); z-index: 100; overflow-y: auto; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column;}
-        #product-page.active { transform: translateX(0); }
-        
-        .prod-nav { position: absolute; top: var(--safe-top); left: 0; width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; z-index: 101; pointer-events: none;}
-        .back-btn { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); pointer-events: auto; cursor: pointer;}
-        
-        .prod-content { flex: 1; overflow-y: auto; padding-bottom: 120px; }
-        .prod-hero { width: 100%; height: 50vh; background: #f6f6f6; display: flex; align-items: center; justify-content: center; position: relative; }
-        .prod-hero img { width: 90%; height: auto; mix-blend-mode: multiply; max-height: 400px; object-fit: contain; }
-        
-        .prod-details { padding: 20px; }
-        .prod-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .prod-name { font-size: 24px; font-weight: 700; width: 70%; line-height: 1.1; }
-        .prod-price { font-size: 18px; font-weight: 500; }
-        .prod-sub { color: var(--sub-text); font-size: 14px; margin-bottom: 25px; }
-        .prod-desc { color: #ccc; font-size: 15px; line-height: 1.5; margin-bottom: 30px; }
-        
-        .size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
-        .size-opt { padding: 15px; border: 1px solid #333; border-radius: 8px; text-align: center; color: white; font-weight: 600; font-size: 14px; transition: 0.2s;}
-        .size-opt.selected { border-color: white; background: #333; }
-        .size-opt:active { transform: scale(0.95); }
-
-        .buy-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px calc(15px + var(--safe-bottom)); background: var(--bg-color); border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; z-index: 102; }
-        .buy-btn { flex: 1; background: white; color: black; padding: 18px; border-radius: 30px; font-size: 16px; text-align: center; font-weight: 700; transition: background 0.2s; box-shadow: 0 0 15px rgba(255,255,255,0.1);}
-        .buy-btn.disabled { background: #555; color: #888; pointer-events: none; }
-
-        /* PROCESSING & GOT EM OVERLAY */
-        #fullscreen-overlay { position: fixed; inset: 0; background: #111; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
-        #fullscreen-overlay.active { opacity: 1; pointer-events: auto; }
-
-        /* States for Overlay */
-        .overlay-content { text-align: center; width: 100%; display: none; }
-        .overlay-content.visible { display: flex; flex-direction: column; align-items: center; }
-
-        /* Spinner */
-        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Got Em Specifics */
-        .got-em-text { font-family: 'Impact', sans-serif; font-size: clamp(80px, 20vw, 130px); text-transform: uppercase; line-height: 0.85; text-align: center; color: #e5e5e5; margin-bottom: 20px; letter-spacing: -2px; transform: scaleY(1.1); margin-top: -50px; opacity: 0; transform: scaleY(1.1) translateY(20px); transition: all 0.6s ease-out;}
-        .got-em-text.animate { opacity: 1; transform: scaleY(1.1) translateY(0); }
-
-        .got-em-img-container { width: 100%; height: 40vh; display: flex; align-items: center; justify-content: center; position: relative; }
-        .got-em-img { width: 85%; max-width: 400px; height: auto; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6)); opacity: 0; transform: scale(0.9); transition: all 0.6s ease-out 0.3s; }
-        .got-em-img.animate { opacity: 1; transform: scale(1) rotate(-5deg); }
-
-        .got-em-details { opacity: 0; transition: opacity 1s ease 1s; margin-top: 20px;}
-        .got-em-details.animate { opacity: 1; }
-
-        .share-btn { background: white; color: black; width: 80%; max-width: 300px; padding: 18px; border-radius: 30px; font-weight: 700; font-size: 16px; position: absolute; bottom: calc(50px + var(--safe-bottom)); }
-        .close-overlay { position: absolute; top: calc(var(--safe-top) + 20px); right: 25px; width: 30px; height: 30px; color: white; font-size: 30px; cursor: pointer; line-height: 30px; text-align: center; }
-
-        /* TAB BAR */
-        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(55px + var(--safe-bottom)); background: var(--bg-color); border-top: 1px solid #222; display: flex; justify-content: space-around; padding-top: 8px; padding-bottom: var(--safe-bottom); z-index: 90; }
-        .tab { display: flex; flex-direction: column; align-items: center; color: #666; font-size: 10px; font-weight: 600; width: 20%;}
-        .tab.active { color: white; }
-        .tab svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
-
-        /* SETTINGS MODAL */
-        #settings-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-        #settings-modal.active { opacity: 1; pointer-events: auto; }
-        .settings-box { background: #222; padding: 25px; border-radius: 20px; width: 100%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .settings-box input { width: 100%; padding: 14px; background: #333; border: 1px solid #444; color: white; margin-bottom: 15px; border-radius: 10px; font-size: 16px;}
-        .settings-box h3 { margin-bottom: 20px; text-align: center; font-size: 18px;}
-
-        /* UTILS */
-        .hidden { display: none !important; }
+        button:hover { background-color: #0056b3; }
+        .info { font-size: 12px; color: #888; margin-top: 10px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-    <div id="view-feed" class="view-section">
-        <header class="header">
-            <div class="logo">SNKRS</div>
-            <div class="header-icons">
-                 <svg viewBox="0 0 24 24"><path d="M21.71 20.29L17 15.61A9.22 9.22 0 0 0 19 10.5A9.5 9.5 0 1 0 9.5 20a9.22 9.22 0 0 0 5.11-2l4.68 4.71a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.42zM9.5 18A7.5 7.5 0 1 1 17 10.5A7.54 7.54 0 0 1 9.5 18z"/></svg>
-            </div>
-        </header>
-        <div id="main-view">
-            </div>
-    </div>
-
-    <div id="product-page">
-        <div class="prod-nav">
-            <div class="back-btn" onclick="closeProduct()">
-                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-            </div>
-        </div>
+    <div id="controls">
+        <h2>Run Generator</h2>
         
-        <div class="prod-content">
-            <div class="prod-hero">
-                <img id="p-img" src="" alt="Shoe Image" onerror="this.src='https://via.placeholder.com/400x400/333/fff?text=No+Image'">
-            </div>
-            
-            <div class="prod-details">
-                <div class="prod-row">
-                    <div class="prod-name" id="p-name">Shoe Name</div>
-                    <div class="prod-price" id="p-price">$000</div>
-                </div>
-                <div class="prod-sub" id="p-sub">Category</div>
-                
-                <div class="prod-desc" id="p-desc">
-                    Description...
-                </div>
-
-                <div class="size-grid">
-                    <div class="size-opt" onclick="selectSize(this)">M 7</div>
-                    <div class="size-opt" onclick="selectSize(this)">M 8</div>
-                    <div class="size-opt" onclick="selectSize(this)">M 8.5</div>
-                    <div class="size-opt" onclick="selectSize(this)">M 9</div>
-                    <div class="size-opt selected" onclick="selectSize(this)">M 10</div>
-                    <div class="size-opt" onclick="selectSize(this)">M 10.5</div>
-                    <div class="size-opt" onclick="selectSize(this)">M 11</div>
-                    <div class="size-opt" onclick="selectSize(this)">M 12</div>
-                    <div class="size-opt" onclick="selectSize(this)">M 13</div>
-                </div>
-            </div>
+        <div class="input-group">
+            <label>Avg Pace (min/km)</label>
+            <input type="text" id="pace" value="5:00" placeholder="e.g. 5:00">
         </div>
 
-        <div class="buy-bar">
-            <div class="buy-btn" id="buy-button" onclick="startPurchaseFlow()">$180.00</div>
+        <div class="input-group">
+            <label>Avg Heart Rate (bpm)</label>
+            <input type="number" id="hr" value="145">
         </div>
+
+        <div class="input-group">
+            <label>Run Start Time</label>
+            <input type="datetime-local" id="startTime">
+        </div>
+
+        <button onclick="downloadGPX()">Download GPX</button>
+        <p class="info">
+            <strong>Instructions:</strong> Click on the map to set a Start point. Click again to set the End point. A blue line will snap to the roads automatically.
+        </p>
     </div>
 
-    <div id="fullscreen-overlay">
-        <div class="close-overlay" onclick="closeGotEm()">×</div>
+    <div id="map"></div>
 
-        <div id="state-spinner" class="overlay-content">
-            <div class="spinner"></div>
-            <div style="font-weight: 600; font-size: 16px;">Processing Payment...</div>
-            <div style="font-size: 12px; color: #888; margin-top: 10px;">Do not close the app</div>
-        </div>
-
-        <div id="state-queue" class="overlay-content">
-            <div style="font-size: 50px; margin-bottom: 10px;">⏳</div>
-            <div style="font-weight: 700; font-size: 20px; margin-bottom: 5px;">You're in line</div>
-            <div style="font-size: 14px; color: #aaa; width: 80%;">We're checking our inventory. Please wait...</div>
-        </div>
-
-        <div id="state-got-em" class="overlay-content" style="width: 100%; height: 100%; justify-content: flex-start; padding-top: 15vh;">
-            <div class="got-em-text" id="got-em-text">GOT<br>'EM</div>
-            <div class="got-em-img-container">
-                <img id="got-em-img" class="got-em-img" src="" alt="">
-            </div>
-            <div class="got-em-details" id="got-em-details">
-                <div style="font-size: 20px; font-weight: 800; margin-bottom: 5px;" id="got-em-name">Shoe Name</div>
-                <div style="font-size: 15px; color: #bbb;">Your order is confirmed</div>
-            </div>
-            <div class="share-btn">Share</div>
-        </div>
-    </div>
-
-    <div id="view-profile" class="view-section hidden" style="padding-top: var(--safe-top);">
-        <div style="padding: 40px 20px; text-align: center; border-bottom: 1px solid #222;">
-            <div style="width: 90px; height: 90px; background: #333; border-radius: 50%; margin: 0 auto 15px; overflow: hidden;">
-                <svg viewBox="0 0 24 24" fill="#666" style="width:100%; height:100%;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            </div>
-            <h2 style="margin-bottom: 5px;">Member</h2>
-            <p style="color: #666; font-size: 13px;">Nike Member Since 2021</p>
-        </div>
-        
-        <div style="padding: 20px; border-bottom: 1px solid #222;">Inbox</div>
-        <div style="padding: 20px; border-bottom: 1px solid #222;">Orders</div>
-        
-        <div onclick="openSettings()" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--nike-red);">
-            <span style="font-weight: 600;">Add Custom Shoe (Fix Broken Images)</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94c0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.09.16-.12.36.03.61l2.03 1.58c-.05.3-.09.63-.09.94c0 .31.04.63.09.94l-2.03 1.58a.49.49 0 0 0-.03.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.09-.47-.03-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6s3.6 1.62 3.6 3.6s-1.62 3.6-3.6 3.6z"/></svg>
-        </div>
-    </div>
-
-    <div id="settings-modal">
-        <div class="settings-box">
-            <h3>Add Shoe to Catalog</h3>
-            <p style="color:#888; font-size:12px; margin-bottom:15px; text-align:center;">Paste a URL ending in .jpg or .png</p>
-            <input type="text" id="custom-name" placeholder="Shoe Name (e.g. Chicago 1s)">
-            <input type="text" id="custom-img" placeholder="Image URL">
-            <input type="text" id="custom-price" placeholder="Price (e.g. $180.00)">
-            <div style="display:flex; gap:10px;">
-                <button onclick="closeSettings()" style="flex:1; background:#444; color:white; padding:12px; border:none; border-radius:10px;">Cancel</button>
-                <button onclick="saveCustomShoe()" style="flex:1; background:white; color:black; padding:12px; border:none; border-radius:10px; font-weight:bold;">Add Shoe</button>
-            </div>
-        </div>
-    </div>
-
-    <nav class="tab-bar">
-        <div class="tab active" onclick="switchTab('feed', this)">
-            <svg viewBox="0 0 24 24"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>
-            Feed
-        </div>
-        <div class="tab" onclick="switchTab('instock', this)">
-            <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm2 4h12v2H6zm2 4h8v2H8z"/></svg>
-            In Stock
-        </div>
-        <div class="tab" onclick="switchTab('upcoming', this)">
-            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
-            Upcoming
-        </div>
-        <div class="tab" onclick="switchTab('profile', this)">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            Profile
-        </div>
-    </nav>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // --- DATA CATALOG ---
-        // Using Wikipedia/Commons or reliable static placeholders to prevent broken images.
-        // User is encouraged to add their own via settings.
-        const catalog = [
-            {
-                id: 1,
-                name: "Air Jordan 1 'Chicago'",
-                sub: "Lost & Found",
-                price: "$180.00",
-                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Air_Jordan_1_High_The_Return_Chicago.jpg/640px-Air_Jordan_1_High_The_Return_Chicago.jpg", 
-                desc: "The Air Jordan 1 'Chicago' brings back the classic varsity red, black and white colorway. With cracked leather and a pre-yellowed midsole, it tells the story of a lost pair found in a mom-and-pop shop."
-            },
-            {
-                id: 2,
-                name: "Air Jordan 1 'Mocha'",
-                sub: "Dark Mocha",
-                price: "$170.00",
-                // Fallback placeholder because specific sneaker images often 403
-                img: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80", 
-                desc: "The Air Jordan 1 Dark Mocha features a Sail leather base with black leather overlays and Mocha suede on the heel and collar."
-            },
-            {
-                id: 3,
-                name: "Off-White™ x AJ1",
-                sub: "UNC",
-                price: "$190.00",
-                img: "https://images.unsplash.com/photo-1516478177764-9fe5bd7e9717?auto=format&fit=crop&w=800&q=80",
-                desc: "Virgil Abloh continues his deconstructed design language with the Air Jordan 1 'UNC'. Featuring the signature red zip tie."
+        // 1. Initialize Map
+        var map = L.map('map').setView([40.7128, -74.0060], 13); // Default to NYC, user can move
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Set default start time to "Now"
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('startTime').value = now.toISOString().slice(0,16);
+
+        // 2. Routing Logic
+        var control = L.Routing.control({
+            waypoints: [],
+            routeWhileDragging: true,
+            show: false, // Hide the turn-by-turn text box
+            createMarker: function(i, wp, nWps) {
+                // Simple markers for Start (Green) and End (Red)
+                var color = (i === 0) ? 'green' : 'red';
+                return L.marker(wp.latLng, { draggable: true });
             }
-        ];
+        }).addTo(map);
 
-        let currentShoe = null;
+        // Handle Map Clicks to add Waypoints
+        map.on('click', function(e) {
+            var waypoints = control.getWaypoints();
+            // Remove empty waypoints if any
+            waypoints = waypoints.filter(wp => wp.latLng);
 
-        function renderFeed() {
-            const container = document.getElementById('main-view');
-            container.innerHTML = '';
-            
-            catalog.forEach(shoe => {
-                const card = document.createElement('div');
-                card.className = 'feed-card';
-                card.onclick = () => openProduct(shoe);
-                card.innerHTML = `
-                    <img src="${shoe.img}" class="feed-img" onerror="this.src='https://via.placeholder.com/400?text=Image+Blocked'">
-                    <div class="feed-overlay">
-                        <div class="feed-sub">${shoe.sub}</div>
-                        <div class="feed-title">${shoe.name}</div>
-                        <div class="feed-btn">Shop</div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-            // Spacer
-            const pad = document.createElement('div');
-            pad.style.height = "50px";
-            container.appendChild(pad);
-        }
-
-        function openProduct(shoe) {
-            currentShoe = shoe;
-            document.getElementById('p-img').src = shoe.img;
-            document.getElementById('p-name').innerText = shoe.name;
-            document.getElementById('p-price').innerText = shoe.price;
-            document.getElementById('p-sub').innerText = shoe.sub;
-            document.getElementById('p-desc').innerText = shoe.desc;
-            document.getElementById('buy-button').innerText = shoe.price;
-            document.getElementById('product-page').classList.add('active');
-        }
-
-        function closeProduct() {
-            document.getElementById('product-page').classList.remove('active');
-        }
-
-        function selectSize(el) {
-            document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
-            el.classList.add('selected');
-        }
-
-        // --- PURCHASE FLOW ---
-        function startPurchaseFlow() {
-            // 1. Show Overlay
-            const overlay = document.getElementById('fullscreen-overlay');
-            overlay.classList.add('active');
-            
-            // 2. Show Spinner
-            showOverlayState('state-spinner');
-
-            // 3. WAIT: Transition to Queue after 2 seconds
-            setTimeout(() => {
-                showOverlayState('state-queue');
-            }, 2000);
-
-            // 4. WAIT: Transition to Got Em after 4 more seconds
-            setTimeout(() => {
-                showGotEm();
-            }, 6000);
-        }
-
-        function showOverlayState(stateId) {
-            document.querySelectorAll('.overlay-content').forEach(el => el.classList.remove('visible'));
-            document.getElementById(stateId).classList.add('visible');
-        }
-
-        function showGotEm() {
-            showOverlayState('state-got-em');
-            
-            document.getElementById('got-em-img').src = currentShoe.img;
-            document.getElementById('got-em-name').innerText = currentShoe.name;
-
-            // Trigger animations
-            setTimeout(() => document.getElementById('got-em-text').classList.add('animate'), 100);
-            setTimeout(() => document.getElementById('got-em-img').classList.add('animate'), 300);
-            setTimeout(() => document.getElementById('got-em-details').classList.add('animate'), 800);
-        }
-
-        function closeGotEm() {
-            document.getElementById('fullscreen-overlay').classList.remove('active');
-            
-            // Reset Animations
-            document.getElementById('got-em-text').classList.remove('animate');
-            document.getElementById('got-em-img').classList.remove('animate');
-            document.getElementById('got-em-details').classList.remove('animate');
-            
-            closeProduct();
-        }
-
-        // --- CUSTOM SETTINGS ---
-        function openSettings() { document.getElementById('settings-modal').classList.add('active'); }
-        function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
-
-        function saveCustomShoe() {
-            const name = document.getElementById('custom-name').value;
-            const img = document.getElementById('custom-img').value;
-            const price = document.getElementById('custom-price').value;
-
-            if(name && img) {
-                const newShoe = {
-                    id: Date.now(),
-                    name: name,
-                    sub: "Exclusive Access",
-                    price: price || "$180.00",
-                    img: img,
-                    desc: "This is a custom drop added from your settings."
-                };
-                catalog.unshift(newShoe); // Add to top
-                renderFeed();
-                closeSettings();
-                
-                // Switch to feed
-                switchTab('feed', document.querySelectorAll('.tab')[0]);
-            }
-        }
-
-        // --- TABS ---
-        function switchTab(tabName, el) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-
-            if (tabName === 'feed') {
-                document.getElementById('view-feed').classList.remove('hidden');
-                document.getElementById('view-profile').classList.add('hidden');
-            } else if (tabName === 'profile') {
-                document.getElementById('view-feed').classList.add('hidden');
-                document.getElementById('view-profile').classList.remove('hidden');
+            if (waypoints.length >= 2) {
+                // If we already have a route, reset it to the new click
+                control.setWaypoints([e.latlng]);
             } else {
-                document.getElementById('view-feed').classList.add('hidden');
-                document.getElementById('view-profile').classList.add('hidden');
+                // Otherwise add the point to the list
+                waypoints.push(L.Routing.waypoint(e.latlng));
+                control.setWaypoints(waypoints);
             }
+        });
+
+        // 3. GPX Generation Logic
+        function downloadGPX() {
+            // Get the route data
+            if (!control._routes || control._routes.length === 0) {
+                alert("Please create a route on the map first!");
+                return;
+            }
+
+            var route = control._routes[0]; // The calculated route
+            var coordinates = route.coordinates; // Array of {lat, lng} objects
+            
+            // Get User Inputs
+            var paceInput = document.getElementById('pace').value; // "5:00"
+            var [min, sec] = paceInput.split(':').map(Number);
+            var secPerKm = (min * 60) + sec;
+            
+            var baseHR = parseInt(document.getElementById('hr').value);
+            var startTime = new Date(document.getElementById('startTime').value);
+
+            // XML Header
+            var gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RunGenerator" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
+  <trk>
+    <name>Generated Run</name>
+    <trkseg>`;
+
+            // Loop through coordinates to calculate time and HR
+            var totalDist = 0;
+            
+            for (var i = 0; i < coordinates.length; i++) {
+                var lat = coordinates[i].lat;
+                var lng = coordinates[i].lng;
+                
+                // Calculate distance from previous point to add to time
+                if (i > 0) {
+                    var prev = coordinates[i-1];
+                    var dist = map.distance([prev.lat, prev.lng], [lat, lng]); // Distance in meters
+                    totalDist += dist;
+                }
+
+                // Calculate timestamp
+                // Time = (Distance (km) * SecondsPerKm) added to StartTime
+                var timeOffsetSeconds = (totalDist / 1000) * secPerKm;
+                var currentTime = new Date(startTime.getTime() + (timeOffsetSeconds * 1000));
+                
+                // Generate Fake Heart Rate (Base + random noise)
+                // Add simple noise (-3 to +3 bpm)
+                var noise = Math.floor(Math.random() * 7) - 3; 
+                var currentHR = baseHR + noise;
+
+                // Format Time to ISO String (2023-10-25T12:00:00Z)
+                var timeStr = currentTime.toISOString();
+
+                // Append Point to XML
+                gpx += `
+      <trkpt lat="${lat}" lon="${lng}">
+        <time>${timeStr}</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:hr>${currentHR}</gpxtpx:hr>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>`;
+            }
+
+            // Close XML
+            gpx += `
+    </trkseg>
+  </trk>
+</gpx>`;
+
+            // Trigger Download
+            var blob = new Blob([gpx], { type: 'application/gpx+xml' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = "run_with_heartrate.gpx";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
-
-        // Init
-        renderFeed();
-
     </script>
 </body>
 </html>
