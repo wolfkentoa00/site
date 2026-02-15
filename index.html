@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GPX Run Generator</title>
+    <title>Route Builder (Miles Edition)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -12,7 +12,6 @@
         body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
-        /* Floating Control Panel */
         #controls {
             position: absolute;
             top: 20px;
@@ -22,12 +21,13 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             z-index: 1000;
-            width: 300px;
+            width: 280px;
         }
-        h2 { margin-top: 0; font-size: 18px; color: #333; }
+        h2 { margin-top: 0; font-size: 18px; color: #333; margin-bottom: 15px; }
         .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
         button {
             width: 100%;
             padding: 12px;
@@ -37,20 +37,23 @@
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            margin-top: 5px;
         }
         button:hover { background-color: #0056b3; }
-        .info { font-size: 12px; color: #888; margin-top: 10px; line-height: 1.4; }
+        button#reset { background-color: #ff3b30; margin-top: 10px; }
+        button#reset:hover { background-color: #d63028; }
+
+        .status { font-size: 12px; margin-top: 10px; color: #666; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="controls">
-        <h2>Run Generator</h2>
+        <h2>Run Planner</h2>
         
         <div class="input-group">
-            <label>Avg Pace (min/km)</label>
-            <input type="text" id="pace" value="5:00" placeholder="e.g. 5:00">
+            <label>Pace (min/mile)</label>
+            <input type="text" id="pace" value="8:30" placeholder="e.g. 8:30">
         </div>
 
         <div class="input-group">
@@ -59,14 +62,13 @@
         </div>
 
         <div class="input-group">
-            <label>Run Start Time</label>
+            <label>Start Time</label>
             <input type="datetime-local" id="startTime">
         </div>
 
         <button onclick="downloadGPX()">Download GPX</button>
-        <p class="info">
-            <strong>Instructions:</strong> Click on the map to set a Start point. Click again to set the End point. A blue line will snap to the roads automatically.
-        </p>
+        <button id="reset" onclick="resetMap()">Reset Map</button>
+        <div class="status" id="statusMsg">Click map to start routing...</div>
     </div>
 
     <div id="map"></div>
@@ -75,99 +77,129 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // 1. Initialize Map
-        var map = L.map('map').setView([40.7128, -74.0060], 13); // Default to NYC, user can move
+        // --- 1. SETUP MAP ---
+        var map = L.map('map').setView([40.7128, -74.0060], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Set default start time to "Now"
+        // Set default time to now
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('startTime').value = now.toISOString().slice(0,16);
 
-        // 2. Routing Logic
+        // Global variable to store the calculated route
+        var calculatedRoute = null;
+
+        // --- 2. ROUTING ENGINE ---
         var control = L.Routing.control({
             waypoints: [],
             routeWhileDragging: true,
-            show: false, // Hide the turn-by-turn text box
+            show: false, // Hide the default text directions box
+            lineOptions: {
+                styles: [{color: 'blue', opacity: 0.7, weight: 5}]
+            },
             createMarker: function(i, wp, nWps) {
-                // Simple markers for Start (Green) and End (Red)
-                var color = (i === 0) ? 'green' : 'red';
+                // Determine color: Green for start, Red for end, Blue for middle
+                var color = (i === 0) ? 'green' : (i === nWps - 1 ? 'red' : 'blue');
+                // You can replace this with custom icons if desired, keeping it simple for now
                 return L.marker(wp.latLng, { draggable: true });
             }
         }).addTo(map);
 
-        // Handle Map Clicks to add Waypoints
-        map.on('click', function(e) {
-            var waypoints = control.getWaypoints();
-            // Remove empty waypoints if any
-            waypoints = waypoints.filter(wp => wp.latLng);
-
-            if (waypoints.length >= 2) {
-                // If we already have a route, reset it to the new click
-                control.setWaypoints([e.latlng]);
-            } else {
-                // Otherwise add the point to the list
-                waypoints.push(L.Routing.waypoint(e.latlng));
-                control.setWaypoints(waypoints);
-            }
+        // Listen for when a route is found/calculated
+        control.on('routesfound', function(e) {
+            calculatedRoute = e.routes[0];
+            var distMiles = (calculatedRoute.summary.totalDistance / 1609.34).toFixed(2);
+            document.getElementById('statusMsg').innerText = `Route: ${distMiles} miles found!`;
         });
 
-        // 3. GPX Generation Logic
+        control.on('routingerror', function() {
+            document.getElementById('statusMsg').innerText = "Could not find road path.";
+            calculatedRoute = null;
+        });
+
+        // --- 3. CLICK TO ADD POINTS ---
+        map.on('click', function(e) {
+            var waypoints = control.getWaypoints();
+            // Filter out any null waypoints (initial state)
+            waypoints = waypoints.filter(wp => wp.latLng);
+            
+            // Add the new point
+            waypoints.push(L.Routing.waypoint(e.latlng));
+            control.setWaypoints(waypoints);
+            
+            document.getElementById('statusMsg').innerText = "Calculating path...";
+        });
+
+        // --- 4. RESET FUNCTION ---
+        function resetMap() {
+            control.setWaypoints([]);
+            calculatedRoute = null;
+            document.getElementById('statusMsg').innerText = "Map cleared.";
+        }
+
+        // --- 5. GENERATE GPX ---
         function downloadGPX() {
-            // Get the route data
-            if (!control._routes || control._routes.length === 0) {
-                alert("Please create a route on the map first!");
+            if (!calculatedRoute) {
+                alert("Please draw a route on the map first!");
                 return;
             }
 
-            var route = control._routes[0]; // The calculated route
-            var coordinates = route.coordinates; // Array of {lat, lng} objects
-            
-            // Get User Inputs
-            var paceInput = document.getElementById('pace').value; // "5:00"
+            // 1. Get Inputs
+            var paceInput = document.getElementById('pace').value; 
             var [min, sec] = paceInput.split(':').map(Number);
-            var secPerKm = (min * 60) + sec;
-            
-            var baseHR = parseInt(document.getElementById('hr').value);
+            if (isNaN(min)) min = 8; 
+            if (isNaN(sec)) sec = 0;
+
+            // Calculate "Seconds per Meter" based on Miles pace
+            // (Min * 60 + Sec) = Seconds per Mile
+            // Seconds per Mile / 1609.34 = Seconds per Meter
+            var secondsPerMile = (min * 60) + sec;
+            var secondsPerMeter = secondsPerMile / 1609.34;
+
+            var baseHR = parseInt(document.getElementById('hr').value) || 145;
             var startTime = new Date(document.getElementById('startTime').value);
 
-            // XML Header
+            // 2. Start GPX String
             var gpx = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="RunGenerator" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
+<gpx version="1.1" creator="RunBuilder" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
   <trk>
-    <name>Generated Run</name>
+    <name>Morning Run</name>
     <trkseg>`;
 
-            // Loop through coordinates to calculate time and HR
-            var totalDist = 0;
-            
+            // 3. Process Coordinates
+            var coordinates = calculatedRoute.coordinates;
+            var totalDistMeters = 0;
+
             for (var i = 0; i < coordinates.length; i++) {
                 var lat = coordinates[i].lat;
                 var lng = coordinates[i].lng;
-                
-                // Calculate distance from previous point to add to time
+
+                // Calculate distance from previous point
                 if (i > 0) {
                     var prev = coordinates[i-1];
-                    var dist = map.distance([prev.lat, prev.lng], [lat, lng]); // Distance in meters
-                    totalDist += dist;
+                    // Leaflet LatLng distanceTo returns meters
+                    var p1 = L.latLng(prev.lat, prev.lng);
+                    var p2 = L.latLng(lat, lng);
+                    totalDistMeters += p1.distanceTo(p2);
                 }
 
                 // Calculate timestamp
-                // Time = (Distance (km) * SecondsPerKm) added to StartTime
-                var timeOffsetSeconds = (totalDist / 1000) * secPerKm;
+                var timeOffsetSeconds = totalDistMeters * secondsPerMeter;
                 var currentTime = new Date(startTime.getTime() + (timeOffsetSeconds * 1000));
-                
-                // Generate Fake Heart Rate (Base + random noise)
-                // Add simple noise (-3 to +3 bpm)
-                var noise = Math.floor(Math.random() * 7) - 3; 
-                var currentHR = baseHR + noise;
 
-                // Format Time to ISO String (2023-10-25T12:00:00Z)
+                // Generate Natural Heart Rate
+                // Add noise (-3 to +3)
+                var noise = Math.floor(Math.random() * 7) - 3;
+                // Slight drift based on duration (heart rate drift)
+                var drift = (i / coordinates.length) * 5; 
+                var currentHR = Math.round(baseHR + noise + drift);
+
+                // Format Time
                 var timeStr = currentTime.toISOString();
 
-                // Append Point to XML
+                // Add Point
                 gpx += `
       <trkpt lat="${lat}" lon="${lng}">
         <time>${timeStr}</time>
@@ -179,18 +211,18 @@
       </trkpt>`;
             }
 
-            // Close XML
+            // 4. Close GPX
             gpx += `
     </trkseg>
   </trk>
 </gpx>`;
 
-            // Trigger Download
+            // 5. Trigger Download
             var blob = new Blob([gpx], { type: 'application/gpx+xml' });
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.href = url;
-            a.download = "run_with_heartrate.gpx";
+            a.download = "my_run_route.gpx";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
