@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Route Builder (Miles Edition)</title>
+    <title>Route Builder (Miles + Steps)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -24,14 +24,14 @@
             width: 280px;
         }
         h2 { margin-top: 0; font-size: 18px; color: #333; margin-bottom: 15px; }
-        .input-group { margin-bottom: 15px; }
+        .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
         input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         
         button {
             width: 100%;
             padding: 12px;
-            background-color: #007AFF;
+            background-color: #34C759; /* Apple Health Green */
             color: white;
             border: none;
             border-radius: 8px;
@@ -39,26 +39,32 @@
             cursor: pointer;
             margin-top: 5px;
         }
-        button:hover { background-color: #0056b3; }
+        button:hover { background-color: #2da84a; }
         button#reset { background-color: #ff3b30; margin-top: 10px; }
-        button#reset:hover { background-color: #d63028; }
-
+        
         .status { font-size: 12px; margin-top: 10px; color: #666; text-align: center; }
+        .hint { font-size: 10px; color: #888; margin-top: 2px; }
     </style>
 </head>
 <body>
 
     <div id="controls">
-        <h2>Run Planner</h2>
+        <h2>Run Planner Pro</h2>
         
         <div class="input-group">
             <label>Pace (min/mile)</label>
-            <input type="text" id="pace" value="8:30" placeholder="e.g. 8:30">
+            <input type="text" id="pace" value="8:30">
         </div>
 
         <div class="input-group">
             <label>Avg Heart Rate (bpm)</label>
-            <input type="number" id="hr" value="145">
+            <input type="number" id="hr" value="150">
+        </div>
+
+        <div class="input-group">
+            <label>Cadence / Steps Per Min</label>
+            <input type="number" id="cadence" value="170">
+            <div class="hint">Walk: ~110 | Run: ~170</div>
         </div>
 
         <div class="input-group">
@@ -68,7 +74,7 @@
 
         <button onclick="downloadGPX()">Download GPX</button>
         <button id="reset" onclick="resetMap()">Reset Map</button>
-        <div class="status" id="statusMsg">Click map to start routing...</div>
+        <div class="status" id="statusMsg">Click map to plot route...</div>
     </div>
 
     <div id="map"></div>
@@ -83,92 +89,72 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Set default time to now
+        // Set default time
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('startTime').value = now.toISOString().slice(0,16);
 
-        // Global variable to store the calculated route
         var calculatedRoute = null;
 
         // --- 2. ROUTING ENGINE ---
         var control = L.Routing.control({
             waypoints: [],
             routeWhileDragging: true,
-            show: false, // Hide the default text directions box
-            lineOptions: {
-                styles: [{color: 'blue', opacity: 0.7, weight: 5}]
-            },
+            show: false,
+            lineOptions: { styles: [{color: '#007AFF', opacity: 0.8, weight: 6}] },
             createMarker: function(i, wp, nWps) {
-                // Determine color: Green for start, Red for end, Blue for middle
-                var color = (i === 0) ? 'green' : (i === nWps - 1 ? 'red' : 'blue');
-                // You can replace this with custom icons if desired, keeping it simple for now
                 return L.marker(wp.latLng, { draggable: true });
             }
         }).addTo(map);
 
-        // Listen for when a route is found/calculated
         control.on('routesfound', function(e) {
             calculatedRoute = e.routes[0];
             var distMiles = (calculatedRoute.summary.totalDistance / 1609.34).toFixed(2);
-            document.getElementById('statusMsg').innerText = `Route: ${distMiles} miles found!`;
+            document.getElementById('statusMsg').innerText = `Distance: ${distMiles} miles`;
         });
 
-        control.on('routingerror', function() {
-            document.getElementById('statusMsg').innerText = "Could not find road path.";
-            calculatedRoute = null;
-        });
-
-        // --- 3. CLICK TO ADD POINTS ---
+        // --- 3. CLICK HANDLER ---
         map.on('click', function(e) {
-            var waypoints = control.getWaypoints();
-            // Filter out any null waypoints (initial state)
-            waypoints = waypoints.filter(wp => wp.latLng);
-            
-            // Add the new point
+            var waypoints = control.getWaypoints().filter(wp => wp.latLng);
             waypoints.push(L.Routing.waypoint(e.latlng));
             control.setWaypoints(waypoints);
-            
-            document.getElementById('statusMsg').innerText = "Calculating path...";
+            document.getElementById('statusMsg').innerText = "Calculating...";
         });
 
-        // --- 4. RESET FUNCTION ---
         function resetMap() {
             control.setWaypoints([]);
             calculatedRoute = null;
             document.getElementById('statusMsg').innerText = "Map cleared.";
         }
 
-        // --- 5. GENERATE GPX ---
+        // --- 4. GENERATE GPX ---
         function downloadGPX() {
             if (!calculatedRoute) {
-                alert("Please draw a route on the map first!");
+                alert("Please draw a route first!");
                 return;
             }
 
-            // 1. Get Inputs
+            // Inputs
             var paceInput = document.getElementById('pace').value; 
             var [min, sec] = paceInput.split(':').map(Number);
-            if (isNaN(min)) min = 8; 
-            if (isNaN(sec)) sec = 0;
+            if (isNaN(min)) min = 9; if (isNaN(sec)) sec = 0;
 
-            // Calculate "Seconds per Meter" based on Miles pace
-            // (Min * 60 + Sec) = Seconds per Mile
-            // Seconds per Mile / 1609.34 = Seconds per Meter
+            // Speed Math (Miles to Meters)
             var secondsPerMile = (min * 60) + sec;
             var secondsPerMeter = secondsPerMile / 1609.34;
 
-            var baseHR = parseInt(document.getElementById('hr').value) || 145;
+            var baseHR = parseInt(document.getElementById('hr').value) || 150;
+            var baseCadence = parseInt(document.getElementById('cadence').value) || 170;
             var startTime = new Date(document.getElementById('startTime').value);
 
-            // 2. Start GPX String
+            // XML Header
             var gpx = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="RunBuilder" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
+<gpx version="1.1" creator="RunBuilderPro" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
   <trk>
-    <name>Morning Run</name>
+    <name>Generated Run</name>
     <trkseg>`;
 
-            // 3. Process Coordinates
+            // Loop Coordinates
             var coordinates = calculatedRoute.coordinates;
             var totalDistMeters = 0;
 
@@ -176,53 +162,55 @@
                 var lat = coordinates[i].lat;
                 var lng = coordinates[i].lng;
 
-                // Calculate distance from previous point
+                // Distance calculation
                 if (i > 0) {
                     var prev = coordinates[i-1];
-                    // Leaflet LatLng distanceTo returns meters
                     var p1 = L.latLng(prev.lat, prev.lng);
                     var p2 = L.latLng(lat, lng);
                     totalDistMeters += p1.distanceTo(p2);
                 }
 
-                // Calculate timestamp
+                // Time Calculation
                 var timeOffsetSeconds = totalDistMeters * secondsPerMeter;
                 var currentTime = new Date(startTime.getTime() + (timeOffsetSeconds * 1000));
 
-                // Generate Natural Heart Rate
-                // Add noise (-3 to +3)
-                var noise = Math.floor(Math.random() * 7) - 3;
-                // Slight drift based on duration (heart rate drift)
-                var drift = (i / coordinates.length) * 5; 
-                var currentHR = Math.round(baseHR + noise + drift);
+                // 1. Fake Heart Rate (with drift and noise)
+                var hrNoise = Math.floor(Math.random() * 6) - 3;
+                var hrDrift = (i / coordinates.length) * 8; // HR rises slightly over time
+                var currentHR = Math.round(baseHR + hrNoise + hrDrift);
 
-                // Format Time
+                // 2. Fake Cadence (Steps) - Add variety so it looks real
+                var cadNoise = Math.floor(Math.random() * 4) - 2; 
+                // If moving very slow (start/end), drop cadence
+                var currentCad = (i < 5 || i > coordinates.length - 5) ? Math.round(baseCadence * 0.8) : Math.round(baseCadence + cadNoise);
+
                 var timeStr = currentTime.toISOString();
 
-                // Add Point
+                // Append GPX Point with EXTENSIONS (HR + Cadence)
                 gpx += `
       <trkpt lat="${lat}" lon="${lng}">
         <time>${timeStr}</time>
         <extensions>
           <gpxtpx:TrackPointExtension>
             <gpxtpx:hr>${currentHR}</gpxtpx:hr>
+            <gpxtpx:cad>${currentCad}</gpxtpx:cad>
           </gpxtpx:TrackPointExtension>
         </extensions>
       </trkpt>`;
             }
 
-            // 4. Close GPX
+            // Close File
             gpx += `
     </trkseg>
   </trk>
 </gpx>`;
 
-            // 5. Trigger Download
+            // Download
             var blob = new Blob([gpx], { type: 'application/gpx+xml' });
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.href = url;
-            a.download = "my_run_route.gpx";
+            a.download = "run_with_steps.gpx";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
